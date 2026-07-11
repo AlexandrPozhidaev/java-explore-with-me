@@ -1,14 +1,37 @@
+version: '3.8'
+
 services:
   stats-server:
+    build: ./stat/stat_srvc
     ports:
       - "9090:9090"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stats_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+    depends_on:
+      stats-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9090/actuator/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   stats-db:
     image: postgres:16.1
+    environment:
+      POSTGRES_DB: stats_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata_stats:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d stats_db"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
 
-  ewm-service:
-    ports:
-      - "8080:8080"
-
-  ewm-db:
-    image: postgres:16.1
+volumes:
+  pgdata_stats:
