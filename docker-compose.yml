@@ -7,7 +7,7 @@ services:
       STATS_SERVER_URL: http://stats-server:9090
     depends_on:
       stats-server:
-        condition: service_healthy
+        condition: service_started
     networks:
       - stats-net
 
@@ -27,10 +27,10 @@ services:
       stats-db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9090/actuator/health || exit 1"]
+      test: ["CMD", "nc", "-z", "localhost", "9090"]
       interval: 5s
-      timeout: 5s
-      retries: 10
+      timeout: 2s
+      retries: 15
     networks:
       - stats-net
 
