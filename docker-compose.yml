@@ -22,7 +22,6 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stats_db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
-      SPRING_JPA_HIBERNATE_DDL_AUTO: none
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health
     depends_on:
       stats-db:
