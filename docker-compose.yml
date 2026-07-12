@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   stats-client:
     build:
@@ -24,13 +22,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: postgres
     depends_on:
       stats-db:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9090/actuator/health | grep -q '\"status\":\"UP\"'"]
-      interval: 10s
-      timeout: 5s
-      retries: 20
-      start_period: 90s
+        condition: service_started
     networks:
       - stats-net
 
@@ -43,11 +35,6 @@ services:
       POSTGRES_PASSWORD: postgres
     volumes:
       - pgdata_stats:/var/lib/postgresql/data
-    healthcheck:
-      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
-      timeout: 5s
-      interval: 5s
-      retries: 10
     networks:
       - stats-net
 
