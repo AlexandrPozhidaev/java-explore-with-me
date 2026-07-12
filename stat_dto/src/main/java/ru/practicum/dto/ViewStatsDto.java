@@ -11,7 +11,15 @@ public class ViewStatsDto {
         this.hits = hits;
     }
 
-    public String getApp() { return app; }
-    public String getUri() { return uri; }
-    public long getHits() { return hits; }
+    public String getApp() {
+        return app;
+    }
+
+    public String getUri() {
+        return uri;
+    }
+
+    public long getHits() {
+        return hits;
+    }
 }

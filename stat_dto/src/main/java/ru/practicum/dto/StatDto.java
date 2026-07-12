@@ -1,6 +1,7 @@
 package ru.practicum.dto;
 
 import jakarta.validation.constraints.NotBlank;
+
 import java.time.LocalDateTime;
 
 public class StatDto {
@@ -15,7 +16,8 @@ public class StatDto {
 
     private LocalDateTime timestamp;
 
-    public StatDto() {}
+    public StatDto() {
+    }
 
     public StatDto(String app, String uri, String ip, LocalDateTime timestamp) {
         this.app = app;
@@ -24,15 +26,35 @@ public class StatDto {
         this.timestamp = timestamp;
     }
 
-    public String getApp() { return app; }
-    public void setApp(String app) { this.app = app; }
+    public String getApp() {
+        return app;
+    }
 
-    public String getUri() { return uri; }
-    public void setUri(String uri) { this.uri = uri; }
+    public void setApp(String app) {
+        this.app = app;
+    }
 
-    public String getIp() { return ip; }
-    public void setIp(String ip) { this.ip = ip; }
+    public String getUri() {
+        return uri;
+    }
 
-    public LocalDateTime getTimestamp() { return timestamp; }
-    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
+    public void setUri(String uri) {
+        this.uri = uri;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public void setIp(String ip) {
+        this.ip = ip;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
 }
