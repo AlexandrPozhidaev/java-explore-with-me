@@ -1,18 +1,6 @@
 version: '3.8'
 
 services:
-  stats-client:
-    build:
-      context: ./stat_clnt
-      dockerfile: Dockerfile
-    environment:
-      STATS_SERVER_URL: http://stats-server:9090
-    depends_on:
-      stats-server:
-        condition: service_healthy
-    networks:
-      - stats-net
-    restart: unless-stopped
 
   stats-server:
     build:
@@ -24,15 +12,20 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stats_db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
+
+      SPRING_ACTUATOR_HEALTH_PROBES_ENABLED: "true"
+      SPRING_ACTUATOR_HEALTH_LIVENESSSTATE_ENABLED: "true"
+      SPRING_ACTUATOR_HEALTH_READINESSSTATE_ENABLED: "true"
     depends_on:
       stats-db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d stats_db -h stats-db"]
+
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9090/actuator/health || exit 1"]
       interval: 5s
       timeout: 5s
-      retries: 10
-      start_period: 10s
+      retries: 12
+      start_period: 30s
     networks:
       - stats-net
     restart: unless-stopped
