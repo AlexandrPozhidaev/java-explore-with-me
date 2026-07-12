@@ -23,7 +23,8 @@ public class StatMapper {
         return new StatDto(
                 entity.getApp(),
                 entity.getUri(),
-                entity.getIp()
+                entity.getIp(),
+                entity.getTimestamp()
         );
     }
 }

@@ -1,15 +1,32 @@
 version: '3.8'
 
 services:
+
+  stats-client:
+    build:
+      context: .
+      dockerfile: stat_clnt/Dockerfile
+    environment:
+      STATS_SERVER_URL: http://stats-server:9090
+    depends_on:
+      stats-server:
+        condition: service_healthy
+    networks:
+      - stats-net
+
   stats-server:
-    build: ./stat/stat_srvc
+    build:
+      context: .
+      dockerfile: stat_srvc/Dockerfile
     ports:
       - "9090:9090"
     environment:
+      SPRING_APPLICATION_NAME: stats-server
       SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stats_db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health
     depends_on:
       stats-db:
         condition: service_healthy
@@ -18,6 +35,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+      - stats-net
 
   stats-db:
     image: postgres:16.1
@@ -32,6 +51,12 @@ services:
       interval: 2s
       timeout: 2s
       retries: 30
+    networks:
+      - stats-net
 
 volumes:
   pgdata_stats:
+
+networks:
+  stats-net:
+    driver: bridge

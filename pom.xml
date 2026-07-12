@@ -22,7 +22,6 @@
         <lombok.version>1.18.30</lombok.version>
     </properties>
 
-    <!-- Управление версиями зависимостей Spring Boot -->
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -38,7 +37,6 @@
     <build>
         <pluginManagement>
             <plugins>
-                <!-- ГЛАВНОЕ: версия плагина Spring Boot вынесена сюда -->
                 <plugin>
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-maven-plugin</artifactId>

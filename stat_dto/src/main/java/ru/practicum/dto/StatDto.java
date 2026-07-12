@@ -1,18 +1,27 @@
 package ru.practicum.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 
 public class StatDto {
+    @NotBlank(message = "app не может быть пустым")
     private String app;
+
+    @NotBlank(message = "uri не может быть пустым")
     private String uri;
+
+    @NotBlank(message = "ip не может быть пустым")
     private String ip;
+
+    private LocalDateTime timestamp;
 
     public StatDto() {}
 
-    public StatDto(String app, String uri, String ip) {
+    public StatDto(String app, String uri, String ip, LocalDateTime timestamp) {
         this.app = app;
         this.uri = uri;
         this.ip = ip;
+        this.timestamp = timestamp;
     }
 
     public String getApp() { return app; }
@@ -24,7 +33,6 @@ public class StatDto {
     public String getIp() { return ip; }
     public void setIp(String ip) { this.ip = ip; }
 
-    public LocalDateTime getTimestamp() {
-        return LocalDateTime.now();
-    }
+    public LocalDateTime getTimestamp() { return timestamp; }
+    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
 }

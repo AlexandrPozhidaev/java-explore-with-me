@@ -7,6 +7,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import ru.practicum.dto.StatDto;
 import ru.practicum.dto.ViewStatsDto;
 
@@ -28,29 +29,26 @@ public class StatController {
     public ResponseEntity<Void> createHit(@Valid @RequestBody StatDto dto) {
         log.debug("Получен POST-запрос /hit: app={}, uri={}, ip={}",
                 dto.getApp(), dto.getUri(), dto.getIp());
-        try {
-            statService.saveHit(dto);
-            log.info("Запись успешно внесена: app={}, uri={}", dto.getApp(), dto.getUri());
-            return ResponseEntity.status(HttpStatus.CREATED).build();
-        } catch (Exception e) {
-            log.error("Ошибка записи: app={}, uri={}", dto.getApp(), dto.getUri(), e);
-            throw e;
-        }
+        statService.saveHit(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @GetMapping("/stats")
     public ResponseEntity<List<ViewStatsDto>> getStats(
             @RequestParam(value = "uris", required = false) List<String> uris,
-            @RequestParam(value = "start") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime start,
-            @RequestParam(value = "end") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime end,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
             @RequestParam(defaultValue = "false") boolean unique
     ) {
-        log.trace("Вызов getStats: urisCount={}, start={}, end={}, unique={}",
-                (uris != null ? uris.size() : 0), start, end, unique);
+        if (start == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Параметр start обязателен");
+        }
+        if (end == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Параметр end обязателен");
+        }
 
-        if (start == null || end == null) {
-            log.warn("getStats: Параметры start и end обязательны");
-            throw new IllegalArgumentException("Параметры start и end обязательны");
+        if (start.isAfter(end)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Параметр start не может быть позже end");
         }
 
         List<ViewStatsDto> stats = statService.getStats(uris, start, end, unique);
