@@ -1,11 +1,8 @@
-version: '3.8'
-
 services:
-
   stats-client:
     build:
-      context: .
-      dockerfile: stat_clnt/Dockerfile
+      context: ./stat_clnt
+      dockerfile: Dockerfile
     environment:
       STATS_SERVER_URL: http://stats-server:9090
     depends_on:
@@ -16,8 +13,8 @@ services:
 
   stats-server:
     build:
-      context: .
-      dockerfile: stat_srvc/Dockerfile
+      context: ./stat_srvc
+      dockerfile: Dockerfile
     ports:
       - "9090:9090"
     environment:
