@@ -6,8 +6,7 @@ services:
     environment:
       STATS_SERVER_URL: http://stats-server:9090
     depends_on:
-      stats-server:
-        condition: service_started
+      - stats-server
     networks:
       - stats-net
 
@@ -18,19 +17,11 @@ services:
     ports:
       - "9090:9090"
     environment:
-      SPRING_APPLICATION_NAME: stats-server
       SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stats_db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
-      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health
     depends_on:
-      stats-db:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "9090"]
-      interval: 5s
-      timeout: 2s
-      retries: 15
+      - stats-db
     networks:
       - stats-net
 
@@ -42,11 +33,6 @@ services:
       POSTGRES_PASSWORD: postgres
     volumes:
       - pgdata_stats:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d stats_db"]
-      interval: 2s
-      timeout: 2s
-      retries: 30
     networks:
       - stats-net
 
@@ -55,4 +41,3 @@ volumes:
 
 networks:
   stats-net:
-    driver: bridge
