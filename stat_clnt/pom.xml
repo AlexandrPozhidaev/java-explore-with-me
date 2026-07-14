@@ -47,7 +47,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>ru.practicum.statsrvc.client.StatClientRunner</mainClass>
+                    <mainClass>ru.practicum.statsrvc.client.StatClientApp</mainClass>
                 </configuration>
             </plugin>
         </plugins>
