@@ -16,7 +16,8 @@ public interface StatRepository extends JpaRepository<Stat, Long> {
             "FROM Stat h " +
             "WHERE (:uris IS NULL OR h.uri IN :uris) " +
             "AND h.timestamp BETWEEN :start AND :end " +
-            "GROUP BY h.app, h.uri")
+            "GROUP BY h.app, h.uri" +
+            "ORDER BY COUNT(h) DESC")
     List<ViewStatsDto> findAllStats(
             @Param("uris") List<String> uris,
             @Param("start") LocalDateTime start,
@@ -27,7 +28,8 @@ public interface StatRepository extends JpaRepository<Stat, Long> {
             "FROM Stat h " +
             "WHERE (:uris IS NULL OR h.uri IN :uris) " +
             "AND h.timestamp BETWEEN :start AND :end " +
-            "GROUP BY h.app, h.uri")
+            "GROUP BY h.app, h.uri" +
+            "ORDER BY COUNT(DISTINCT h.ip) DESC")
     List<ViewStatsDto> findUniqueStats(
             @Param("uris") List<String> uris,
             @Param("start") LocalDateTime start,
