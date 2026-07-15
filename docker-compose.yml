@@ -1,14 +1,49 @@
 services:
   stats-server:
+    build: stat_srvc
+    container_name: stats-server
     ports:
       - "9090:9090"
+    depends_on:
+      stats-db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stats_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_ACTUATOR_HEALTH_PROBES_ENABLED: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9090/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 40s
 
-  stats-db:
-    image: postgres:16.1
-
-  ewm-service:
+  stats-client:
+    build: stat_clnt
+    container_name: stats-client
+    depends_on:
+      stats-server:
+        condition: service_healthy
+    environment:
+      STATS_SERVER_URL: http://stats-server:9090
     ports:
       - "8080:8080"
 
-  ewm-db:
+  stats-db:
     image: postgres:16.1
+    container_name: stats-db
+    environment:
+      POSTGRES_DB: stats_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata_stats:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
+      timeout: 5s
+      interval: 5s
+      retries: 10
+
+volumes:
+  pgdata_stats:
