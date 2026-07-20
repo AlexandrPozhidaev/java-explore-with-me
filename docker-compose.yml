@@ -39,11 +39,49 @@ services:
       POSTGRES_PASSWORD: postgres
     volumes:
       - pgdata_stats:/var/lib/postgresql/data
+      - ./schema-stat.sql:/docker-entrypoint-initdb.d/schema-stat.sql:ro
     healthcheck:
-      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
+      test: ["CMD-SHELL", "pg_isready -U postgres -d stats_db || exit 1"]
+      timeout: 10s
+      interval: 10s
+      retries: 20
+
+  main-srvc:
+    build: main_srvc
+    container_name: main-srvc
+    ports:
+      - "8081:9090"
+    depends_on:
+      main-db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://main-db:5432/main_db
+      SPRING_DATASOURCE_USERNAME: main_db_user
+      SPRING_DATASOURCE_PASSWORD: main_db_password
+      SPRING_ACTUATOR_HEALTH_PROBES_ENABLED: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9090/actuator/health || exit 1"]
+      interval: 10s
       timeout: 5s
-      interval: 5s
-      retries: 10
+      retries: 15
+      start_period: 60s
+
+  main-db:
+    image: postgres:16.1
+    container_name: main-db
+    environment:
+      POSTGRES_DB: main_db
+      POSTGRES_USER: main_db_user
+      POSTGRES_PASSWORD: main_db_password
+    volumes:
+      - pgdata_main:/var/lib/postgresql/data
+      - ./schema-main.sql:/docker-entrypoint-initdb.d/schema-main.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U main_db_user -d main_db || exit 1"]
+      timeout: 10s
+      interval: 10s
+      retries: 20
 
 volumes:
   pgdata_stats:
+  pgdata_main:

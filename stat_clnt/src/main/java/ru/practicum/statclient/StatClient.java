@@ -21,10 +21,11 @@ public class StatClient {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    public StatClient(RestTemplate restTemplate, @Value("${stats.server.url:http://localhost:9090}") String serverUrl) {
+    public StatClient(RestTemplate restTemplate, @Value("${stats.server.url}") String serverUrl) {
         this.restTemplate = restTemplate;
         this.serverUrl = serverUrl.endsWith("/") ? serverUrl : serverUrl + "/";
     }
+
 
     public StatDto hit(String uri, String app, String ip) {
         StatDto request = new StatDto(app, uri, ip, LocalDateTime.now());
