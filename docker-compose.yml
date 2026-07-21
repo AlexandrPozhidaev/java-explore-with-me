@@ -1,11 +1,9 @@
-version: "3.8"
-
 services:
   main-srvc:
     container_name: main-srvc
     build:
       context: .
-      dockerfile: ./main-srvc/Dockerfile
+      dockerfile: ./main_srvc/Dockerfile
     ports:
       - "8080:8080"
     environment:
