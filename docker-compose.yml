@@ -11,9 +11,7 @@ services:
       SPRING_DATASOURCE_USERNAME: ewm_user
       SPRING_DATASOURCE_PASSWORD: ewm_password
       SPRING_JPA_HIBERNATE_DDL_AUTO: none
-      SPRING_SQL_INIT_MODE: always
-      SPRING_SQL_INIT_SCHEMA_LOCATIONS: classpath:schema.sql
-      LOGGING_LEVEL_RU_PRACTICUM_STATSRVC: DEBUG
+      SPRING_SQL_INIT_MODE: never
     depends_on:
       main-db:
         condition: service_healthy
@@ -33,8 +31,7 @@ services:
       SPRING_DATASOURCE_USERNAME: stats_user
       SPRING_DATASOURCE_PASSWORD: stats_password
       SPRING_JPA_HIBERNATE_DDL_AUTO: none
-      SPRING_SQL_INIT_MODE: always
-      SPRING_SQL_INIT_SCHEMA_LOCATIONS: classpath:schema.sql
+      SPRING_SQL_INIT_MODE: never
     depends_on:
       stats-db:
         condition: service_healthy
@@ -51,6 +48,7 @@ services:
       POSTGRES_PASSWORD: ewm_password
     volumes:
       - main-db-data:/var/lib/postgresql/data
+      - ./schema-main.sql:/docker-entrypoint-initdb.d/schema.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ewm_user -d ewm_main"]
       interval: 5s
@@ -69,6 +67,7 @@ services:
       POSTGRES_PASSWORD: stats_password
     volumes:
       - stats-db-data:/var/lib/postgresql/data
+      - ./schema-stat.sql:/docker-entrypoint-initdb.d/schema.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U stats_user -d stats"]
       interval: 5s
