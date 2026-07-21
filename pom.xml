@@ -14,7 +14,7 @@
         <module>stat_dto</module>
         <module>stat_srvc</module>
         <module>stat_clnt</module>
-        <module>main_srvc</module>
+        <module>ewm-service</module>
     </modules>
 
     <properties>

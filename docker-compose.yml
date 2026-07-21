@@ -1,9 +1,9 @@
 services:
-  main-srvc:
-    container_name: main-srvc
+  ewm-service:
+    container_name: ewm-service
     build:
       context: .
-      dockerfile: ./main_srvc/Dockerfile
+      dockerfile: ./ewm-service/Dockerfile
     ports:
       - "8080:8080"
     environment:
