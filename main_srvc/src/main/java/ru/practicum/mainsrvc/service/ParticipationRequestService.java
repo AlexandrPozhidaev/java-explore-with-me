@@ -12,6 +12,7 @@ import ru.practicum.mainsrvc.repository.RequestRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,7 +29,7 @@ public class ParticipationRequestService {
 
     public ParticipationRequestDto createRequest(Long userId, Long eventId, CreateRequestDto dto) {
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new IllegalArgumentException("Event not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Событие не найдено"));
 
         ParticipationRequest request = new ParticipationRequest();
         request.setCreated(LocalDateTime.now());
@@ -53,11 +54,13 @@ public class ParticipationRequestService {
 
     public ParticipationRequestDto approveRequestByInitiator(Long requestId, Long initiatorId) {
         ParticipationRequest req = requestRepository.findById(requestId)
-                .orElseThrow(() -> new IllegalArgumentException("Request not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Запрос не найден"));
 
         Event event = req.getEvent();
-        if (!event.getInitiator().equals(initiatorId)) {
-            throw new IllegalStateException("Only event initiator can approve requests");
+        Long eventInitiatorId = event.getInitiator() != null ? event.getInitiator().getId() : null;
+
+        if (!Objects.equals(eventInitiatorId, initiatorId)) {
+            throw new IllegalStateException("Только инициатор события может подтвердить запрос");
         }
 
         req.setStatus(RequestStatus.CONFIRMED);
@@ -67,11 +70,13 @@ public class ParticipationRequestService {
 
     public ParticipationRequestDto rejectRequestByInitiator(Long requestId, Long initiatorId) {
         ParticipationRequest req = requestRepository.findById(requestId)
-                .orElseThrow(() -> new IllegalArgumentException("Request not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Запрос не найден"));
 
         Event event = req.getEvent();
-        if (!event.getInitiator().equals(initiatorId)) {
-            throw new IllegalStateException("Only event initiator can reject requests");
+        Long eventInitiatorId = event.getInitiator() != null ? event.getInitiator().getId() : null;
+
+        if (!Objects.equals(eventInitiatorId, initiatorId)) {
+            throw new IllegalStateException("Только инициатор события может отклонить запрос");
         }
 
         req.setStatus(RequestStatus.REJECTED);
