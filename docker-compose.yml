@@ -18,6 +18,11 @@ services:
     networks:
       - app-net
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   stats-server:
     container_name: stats-server
@@ -38,6 +43,11 @@ services:
     networks:
       - app-net
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   main-db:
     container_name: main-db
