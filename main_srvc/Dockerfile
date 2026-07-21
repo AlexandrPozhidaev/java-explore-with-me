@@ -1,4 +1,4 @@
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-COPY target/main_srvc-0.0.1-SNAPSHOT.jar app.jar
+COPY main_srvc/target/*.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
