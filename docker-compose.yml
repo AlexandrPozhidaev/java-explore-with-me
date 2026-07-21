@@ -1,87 +1,89 @@
-services:
-  stats-server:
-    build: stat_srvc
-    container_name: stats-server
-    ports:
-      - "9090:9090"
-    depends_on:
-      stats-db:
-        condition: service_healthy
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stats_db
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
-      SPRING_ACTUATOR_HEALTH_PROBES_ENABLED: "true"
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9090/actuator/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 15
-      start_period: 40s
+version: "3.8"
 
-  stats-client:
-    build: stat_clnt
-    container_name: stats-client
-    depends_on:
-      stats-server:
-        condition: service_healthy
-    environment:
-      STATS_SERVER_URL: http://stats-server:9090
+services:
+  main-srvc:
+    container_name: main-srvc
+    build:
+      context: .
+      dockerfile: ./main-srvc/Dockerfile
     ports:
       - "8080:8080"
-
-  stats-db:
-    image: postgres:16.1
-    container_name: stats-db
     environment:
-      POSTGRES_DB: stats_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      - pgdata_stats:/var/lib/postgresql/data
-      - ./schema-stat.sql:/docker-entrypoint-initdb.d/schema-stat.sql:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d stats_db || exit 1"]
-      timeout: 10s
-      interval: 10s
-      retries: 20
-
-  main-srvc:
-    build: main_srvc
-    container_name: main-srvc
-    ports:
-      - "8081:9090"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://main-db:5432/ewm_main
+      SPRING_DATASOURCE_USERNAME: ewm_user
+      SPRING_DATASOURCE_PASSWORD: ewm_password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      SPRING_SQL_INIT_MODE: always
+      SPRING_SQL_INIT_SCHEMA_LOCATIONS: classpath:schema.sql
+      LOGGING_LEVEL_RU_PRACTICUM_STATSRVC: DEBUG
     depends_on:
       main-db:
         condition: service_healthy
+    networks:
+      - app-net
+    restart: unless-stopped
+
+  stats-server:
+    container_name: stats-server
+    build:
+      context: .
+      dockerfile: ./stat_srvc/Dockerfile
+    ports:
+      - "9090:9090"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://main-db:5432/main_db
-      SPRING_DATASOURCE_USERNAME: main_db_user
-      SPRING_DATASOURCE_PASSWORD: main_db_password
-      SPRING_ACTUATOR_HEALTH_PROBES_ENABLED: "true"
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9090/actuator/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 15
-      start_period: 60s
+      SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stats
+      SPRING_DATASOURCE_USERNAME: stats_user
+      SPRING_DATASOURCE_PASSWORD: stats_password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      SPRING_SQL_INIT_MODE: always
+      SPRING_SQL_INIT_SCHEMA_LOCATIONS: classpath:schema.sql
+    depends_on:
+      stats-db:
+        condition: service_healthy
+    networks:
+      - app-net
+    restart: unless-stopped
 
   main-db:
-    image: postgres:16.1
     container_name: main-db
+    image: postgres:16.1
     environment:
-      POSTGRES_DB: main_db
-      POSTGRES_USER: main_db_user
-      POSTGRES_PASSWORD: main_db_password
+      POSTGRES_DB: ewm_main
+      POSTGRES_USER: ewm_user
+      POSTGRES_PASSWORD: ewm_password
     volumes:
-      - pgdata_main:/var/lib/postgresql/data
-      - ./schema-main.sql:/docker-entrypoint-initdb.d/schema-main.sql:ro
+      - main-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U main_db_user -d main_db || exit 1"]
-      timeout: 10s
-      interval: 10s
-      retries: 20
+      test: ["CMD-SHELL", "pg_isready -U ewm_user -d ewm_main"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - app-net
+    restart: unless-stopped
+
+  stats-db:
+    container_name: stats-db
+    image: postgres:16.1
+    environment:
+      POSTGRES_DB: stats
+      POSTGRES_USER: stats_user
+      POSTGRES_PASSWORD: stats_password
+    volumes:
+      - stats-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stats_user -d stats"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - app-net
+    restart: unless-stopped
 
 volumes:
-  pgdata_stats:
-  pgdata_main:
+  main-db-data:
+  stats-db-data:
+
+networks:
+  app-net:
+    driver: bridge
