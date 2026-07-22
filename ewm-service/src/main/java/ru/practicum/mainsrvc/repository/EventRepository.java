@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.practicum.mainsrvc.entity.Event;
 import ru.practicum.mainsrvc.entity.EventStatus;
@@ -28,5 +29,6 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             Pageable pageable
     );
 
-    Optional<Event> findByIdAndInitiator(Long eventId, Long initiatorId);
+    @Query("SELECT e FROM Event e WHERE e.id = :eventId AND e.initiator.id = :initiatorId")
+    Optional<Event> findByIdAndInitiator(@Param("eventId") Long eventId, @Param("initiatorId") Long initiatorId);
 }

@@ -19,9 +19,6 @@ public class User {
     @Column(name = "email", nullable = false, unique = true, length = 255)
     private String email;
 
-    // ВАЖНО: columnDefinition гарантирует NOT NULL + DEFAULT NOW() в БД,
-    // @CreationTimestamp делает то же самое на уровне Hibernate.
-    // Это страховка, если схема создаётся вручную.
     @CreationTimestamp
     @Column(name = "created", nullable = false, updatable = false,
             columnDefinition = "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP")
