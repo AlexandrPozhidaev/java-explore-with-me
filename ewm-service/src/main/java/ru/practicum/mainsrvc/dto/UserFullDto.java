@@ -23,6 +23,9 @@ public class UserFullDto {
         this.active = active;
     }
 
+    public UserFullDto() {
+    }
+
     public Long getId() {
         return id;
     }
