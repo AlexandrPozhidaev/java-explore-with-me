@@ -4,8 +4,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.mainsrvc.dto.UserFullDto;
 import ru.practicum.mainsrvc.dto.UserShortDto;
 import ru.practicum.mainsrvc.entity.User;
+import ru.practicum.mainsrvc.exception.ConflictException;
 import ru.practicum.mainsrvc.exception.EntityNotFoundException;
 import ru.practicum.mainsrvc.repository.UserRepository;
 
@@ -20,6 +22,22 @@ public class UserService {
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
+    }
+
+    @Transactional
+    public UserFullDto createUser(UserFullDto dto) {
+        if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
+            throw new ConflictException("Пользователь с таким email уже существует");
+        }
+
+        User user = new User();
+        user.setName(dto.getName());
+        user.setEmail(dto.getEmail());
+        user.setActive(false);
+
+        User saved = userRepository.save(user);
+
+        return new UserFullDto(saved.getId(), saved.getName(), saved.getEmail(), saved.getActive());
     }
 
     public List<UserShortDto> getAllUsers(int from, int size) {

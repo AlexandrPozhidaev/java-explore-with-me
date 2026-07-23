@@ -1,7 +1,10 @@
 package ru.practicum.mainsrvc.controller;
 
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.mainsrvc.dto.UserFullDto;
 import ru.practicum.mainsrvc.dto.UserShortDto;
 import ru.practicum.mainsrvc.service.UserService;
 
@@ -15,6 +18,12 @@ public class AdminUserController {
 
     public AdminUserController(UserService userService) {
         this.userService = userService;
+    }
+
+    @PostMapping
+    public ResponseEntity<UserFullDto> createUser(@Valid @RequestBody UserFullDto dto) {
+        UserFullDto created = userService.createUser(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @GetMapping

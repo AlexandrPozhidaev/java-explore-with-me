@@ -62,7 +62,6 @@ public class EventService {
         var pageResult = eventRepository.findPublished(categoryIdsFilter, paid, text, PageRequest.of(page, size, sort));
         List<Event> events = pageResult.getContent();
 
-        // Собираем URI для запроса статистики: /events/{id}
         List<String> uris = events.stream()
                 .map(e -> "/events/" + e.getId())
                 .collect(Collectors.toList());
@@ -128,7 +127,6 @@ public class EventService {
         event.setState(EventStatus.PENDING);
 
         event = eventRepository.save(event);
-        // При создании просмотров ещё нет
         return toEventFullDto(event, Collections.emptyMap());
     }
 
@@ -199,6 +197,22 @@ public class EventService {
         return toEventFullDto(event, Collections.emptyMap());
     }
 
+    @Transactional(readOnly = true)
+    public List<EventShortDto> getUserEvents(Long userId, int from, int size) {
+        if (from < 0 || size <= 0 || size > 1000) {
+            throw new IllegalArgumentException("Некорректные параметры пагинации: from >= 0, 0 < size <= 1000");
+        }
+
+        var pageRequest = PageRequest.of(from, size, Sort.unsorted());
+        var eventsPage = eventRepository.findAllByInitiatorId(userId, pageRequest);
+
+        List<Event> events = eventsPage.getContent();
+
+        return events.stream()
+                .map(this::toEventShortDto)
+                .collect(Collectors.toList());
+    }
+
     private EventShortDto toEventShortDto(Event e, Map<String, Long> hitsMap) {
         EventShortDto dto = new EventShortDto();
         dto.setId(e.getId());
@@ -233,6 +247,7 @@ public class EventService {
         dto.setCategory(toCategoryDto(e.getCategory()));
         dto.setInitiator(toUserShortDto(e.getInitiator()));
         dto.setConfirmedRequests(requestRepository.countConfirmedByEventId(e.getId()));
+
         return dto;
     }
 
