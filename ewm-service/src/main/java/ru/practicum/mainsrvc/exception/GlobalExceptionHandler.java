@@ -12,8 +12,6 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @ControllerAdvice
@@ -129,6 +127,15 @@ public class GlobalExceptionHandler {
                 ));
     }
 
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ErrorResponse> handleConflict(ConflictException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(
+                        String.valueOf(HttpStatus.CONFLICT.value()),
+                        ex.getMessage(),
+                        "/")); // если request недоступен, можно оставить заглушку
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(
             Exception ex,
@@ -143,19 +150,5 @@ public class GlobalExceptionHandler {
                         "Внутренняя ошибка сервера",
                         request.getRequestURI()
                 ));
-    }
-
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidation(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(e ->
-                errors.put(e.getField(), e.getDefaultMessage()));
-        return ResponseEntity.badRequest().body(errors);
-    }
-
-    @ExceptionHandler(ConflictException.class)
-    public ResponseEntity<Map<String, String>> handleConflict(ConflictException ex) {
-        return ResponseEntity.status(409).body(Map.of("message", ex.getMessage()));
     }
 }
