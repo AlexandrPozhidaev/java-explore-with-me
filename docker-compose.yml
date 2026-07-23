@@ -1,49 +1,90 @@
 services:
+  ewm-service:
+    container_name: ewm-service
+    build:
+      context: .
+      dockerfile: ./ewm-service/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      SPRING_DATASOURCE_URL: jdbc:postgresql://main-db:5432/ewm_main
+      SPRING_DATASOURCE_USERNAME: ewm_user
+      SPRING_DATASOURCE_PASSWORD: ewm_password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      SPRING_SQL_INIT_MODE: never
+    depends_on:
+      main-db:
+        condition: service_healthy
+    networks:
+      - app-net
+    restart: unless-stopped
+
   stats-server:
-    build: stat_srvc
     container_name: stats-server
+    build:
+      context: .
+      dockerfile: ./stat_srvc/Dockerfile
     ports:
       - "9090:9090"
+    environment:
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stats
+      SPRING_DATASOURCE_USERNAME: stats_user
+      SPRING_DATASOURCE_PASSWORD: stats_password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      SPRING_SQL_INIT_MODE: never
     depends_on:
       stats-db:
         condition: service_healthy
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stats_db
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
-      SPRING_ACTUATOR_HEALTH_PROBES_ENABLED: "true"
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9090/actuator/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 15
-      start_period: 40s
+    networks:
+      - app-net
+    restart: unless-stopped
 
-  stats-client:
-    build: stat_clnt
-    container_name: stats-client
-    depends_on:
-      stats-server:
-        condition: service_healthy
+  main-db:
+    container_name: main-db
+    image: postgres:16.1
     environment:
-      STATS_SERVER_URL: http://stats-server:9090
-    ports:
-      - "8080:8080"
+      POSTGRES_DB: ewm_main
+      POSTGRES_USER: ewm_user
+      POSTGRES_PASSWORD: ewm_password
+    volumes:
+      - main-db-data:/var/lib/postgresql/data
+      - ./init-main.sql:/docker-entrypoint-initdb.d/init-main.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ewm_user -d ewm_main -h 127.0.0.1 -p 5432"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    networks:
+      - app-net
+    restart: unless-stopped
 
   stats-db:
-    image: postgres:16.1
     container_name: stats-db
+    image: postgres:16.1
     environment:
-      POSTGRES_DB: stats_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: stats
+      POSTGRES_USER: stats_user
+      POSTGRES_PASSWORD: stats_password
     volumes:
-      - pgdata_stats:/var/lib/postgresql/data
+      - stats-db-data:/var/lib/postgresql/data
+      - ./init-stats.sql:/docker-entrypoint-initdb.d/init-stats.sql
     healthcheck:
-      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
-      timeout: 5s
+      test: ["CMD-SHELL", "pg_isready -U stats_user -d stats -h 127.0.0.1 -p 5432"]
       interval: 5s
+      timeout: 5s
       retries: 10
+      start_period: 60s
+    networks:
+      - app-net
+    restart: unless-stopped
 
 volumes:
-  pgdata_stats:
+  main-db-data:
+  stats-db-data:
+
+networks:
+  app-net:
+    driver: bridge
