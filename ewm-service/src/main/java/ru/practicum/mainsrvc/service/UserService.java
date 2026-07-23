@@ -45,7 +45,7 @@ public class UserService {
             throw new IllegalArgumentException("Поле не может быть отрицательным");
         }
         if (size <= 0 || size > 1000) {
-            throw new IllegalArgumentException("Значение должно быть не более 1000 символов");
+            throw new IllegalArgumentException("Значение должно быть не более 1000");
         }
 
         var pageRequest = PageRequest.of(from, size, Sort.unsorted());
