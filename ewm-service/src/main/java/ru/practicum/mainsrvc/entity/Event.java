@@ -49,8 +49,8 @@ public class Event {
     @Column(name = "state", nullable = false)
     private EventStatus state;
 
-    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<CompilationEvent> compilations = new ArrayList<>();
+    @ManyToMany(mappedBy = "events", fetch = FetchType.LAZY)
+    private List<Compilation> compilations = new ArrayList<>();
 
     public Event() {
     }
@@ -168,11 +168,11 @@ public class Event {
         this.state = state;
     }
 
-    public List<CompilationEvent> getCompilations() {
+    public List<Compilation> getCompilations() {
         return compilations;
     }
 
-    public void setCompilations(List<CompilationEvent> compilations) {
+    public void setCompilations(List<Compilation> compilations) {
         this.compilations = compilations;
     }
 }
