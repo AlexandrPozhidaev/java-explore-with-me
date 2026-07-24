@@ -25,14 +25,14 @@ public class AdminCompilationController {
         return ResponseEntity.status(201).body(compilationService.createCompilation(dto));
     }
 
-    @PatchMapping("/{compId}")
+    @PatchMapping("/{id}")
     public ResponseEntity<CompilationDto> updateCompilation(
             @PathVariable Long compId,
             @Valid @RequestBody UpdateCompilationDto dto) {
         return ResponseEntity.ok(compilationService.updateCompilation(compId, dto));
     }
 
-    @DeleteMapping("/{compId}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCompilation(@PathVariable Long compId) {
         compilationService.deleteCompilation(compId);
         return ResponseEntity.noContent().build();

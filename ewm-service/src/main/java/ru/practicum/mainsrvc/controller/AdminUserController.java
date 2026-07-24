@@ -33,12 +33,12 @@ public class AdminUserController {
         return ResponseEntity.ok(userService.getAllUsers(from, size));
     }
 
-    @PatchMapping("/{userId}/activate")
+    @PatchMapping("/{id}/activate")
     public ResponseEntity<UserShortDto> activateUser(@PathVariable Long userId) {
         return ResponseEntity.ok(userService.activateUser(userId));
     }
 
-    @DeleteMapping("/{userId}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long userId) {
         userService.deleteUser(userId);
         return ResponseEntity.noContent().build();

@@ -16,7 +16,7 @@ public class UserController {
         this.participationRequestService = participationRequestService;
     }
 
-    @PostMapping("/{userId}/events/{eventId}/requests")
+    @PostMapping("/{id}/events/{id}/requests")
     public ResponseEntity<ParticipationRequestDto> createRequest(
             @PathVariable Long userId,
             @PathVariable Long eventId,

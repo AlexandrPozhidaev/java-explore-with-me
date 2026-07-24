@@ -18,7 +18,7 @@ public class PrivateParticipationRequestController {
         this.requestService = requestService;
     }
 
-    @PostMapping("/{userId}/{eventId}")
+    @PostMapping("/{id}/{eventId}")
     public ResponseEntity<ParticipationRequestDto> createRequest(
             @PathVariable Long userId,
             @PathVariable Long eventId,
@@ -26,7 +26,7 @@ public class PrivateParticipationRequestController {
         return ResponseEntity.status(201).body(requestService.createRequest(userId, eventId, dto));
     }
 
-    @GetMapping("/user/{userId}")
+    @GetMapping("/user/{id}")
     public ResponseEntity<List<ParticipationRequestDto>> getRequestsByUser(@PathVariable Long userId) {
         return ResponseEntity.ok(requestService.getRequestsByUser(userId));
     }

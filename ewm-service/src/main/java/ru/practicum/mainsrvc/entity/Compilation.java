@@ -22,8 +22,13 @@ public class Compilation {
     @Column(name = "pinned", columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean pinned;
 
-    @OneToMany(mappedBy = "compilation", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<CompilationEvent> events = new ArrayList<>();
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "compilation_events",
+            joinColumns = @JoinColumn(name = "compilation_id"),
+            inverseJoinColumns = @JoinColumn(name = "event_id")
+    )
+    private List<Event> events = new ArrayList<>();
 
     public Compilation(String title, String description, Boolean pinned) {
         this.title = title;
@@ -64,13 +69,5 @@ public class Compilation {
 
     public void setPinned(Boolean pinned) {
         this.pinned = pinned;
-    }
-
-    public List<CompilationEvent> getEvents() {
-        return events;
-    }
-
-    public void setEvents(List<CompilationEvent> events) {
-        this.events = events;
     }
 }

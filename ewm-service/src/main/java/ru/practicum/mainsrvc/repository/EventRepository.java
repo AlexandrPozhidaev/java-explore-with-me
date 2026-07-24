@@ -18,7 +18,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     Optional<Event> findByIdAndState(Long id, EventStatus state);
 
     @Query("SELECT e FROM Event e " +
-            "WHERE e.state = :state " +
+            "WHERE e.state = 'PUBLISHED' " +
             "AND (:categoryIds IS NULL OR e.category.id IN :categoryIds) " +
             "AND (:paid IS NULL OR e.paid = :paid) " +
             "AND (:text IS NULL OR (LOWER(e.title) LIKE LOWER(:text) OR LOWER(e.annotation) LIKE LOWER(:text)))")

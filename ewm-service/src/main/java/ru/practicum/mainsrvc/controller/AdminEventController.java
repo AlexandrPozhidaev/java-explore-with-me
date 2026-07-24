@@ -3,6 +3,7 @@ package ru.practicum.mainsrvc.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.mainsrvc.dto.EventFullDto;
+import ru.practicum.mainsrvc.dto.UpdateEventRequestDto;
 import ru.practicum.mainsrvc.service.EventService;
 
 @RestController
@@ -15,13 +16,20 @@ public class AdminEventController {
         this.eventService = eventService;
     }
 
-    @PatchMapping("/{eventId}/publish")
+    @PatchMapping("/{id}")
+    public ResponseEntity<EventFullDto> updateEventAdmin(
+            @PathVariable Long id,
+            @RequestBody UpdateEventRequestDto dto) {
+        return ResponseEntity.ok(eventService.updateEvent(id, dto, null));
+    }
+
+    @PatchMapping("/{id}/publish")
     public ResponseEntity<EventFullDto> publishEvent(@PathVariable Long eventId) {
         return ResponseEntity.ok(eventService.publishEvent(eventId));
     }
 
-    @PatchMapping("/{eventId}/reject")
-    public ResponseEntity<EventFullDto> rejectEvent(@PathVariable Long eventId) {
+    @PatchMapping("/{id}/cancel")
+    public ResponseEntity<EventFullDto> cancelEvent(@PathVariable Long eventId) {
         return ResponseEntity.ok(eventService.canceledEvent(eventId));
     }
 }
