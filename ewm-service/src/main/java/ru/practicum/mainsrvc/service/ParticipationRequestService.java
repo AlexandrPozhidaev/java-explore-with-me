@@ -7,8 +7,11 @@ import ru.practicum.mainsrvc.dto.ParticipationRequestDto;
 import ru.practicum.mainsrvc.entity.Event;
 import ru.practicum.mainsrvc.entity.ParticipationRequest;
 import ru.practicum.mainsrvc.entity.RequestStatus;
+import ru.practicum.mainsrvc.entity.User;
+import ru.practicum.mainsrvc.exception.NotFoundException;
 import ru.practicum.mainsrvc.repository.EventRepository;
 import ru.practicum.mainsrvc.repository.RequestRepository;
+import ru.practicum.mainsrvc.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,15 +24,20 @@ public class ParticipationRequestService {
 
     private final RequestRepository requestRepository;
     private final EventRepository eventRepository;
+    private final UserRepository userRepository;
 
-    public ParticipationRequestService(RequestRepository requestRepository, EventRepository eventRepository) {
+    public ParticipationRequestService(RequestRepository requestRepository, EventRepository eventRepository, UserRepository userRepository) {
         this.requestRepository = requestRepository;
         this.eventRepository = eventRepository;
+        this.userRepository = userRepository;
     }
 
     public ParticipationRequestDto createRequest(Long userId, Long eventId, CreateRequestDto dto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
+
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new IllegalArgumentException("Событие не найдено"));
+                .orElseThrow(() -> new NotFoundException("Событие не найдено"));
 
         ParticipationRequest request = new ParticipationRequest();
         request.setCreated(LocalDateTime.now());

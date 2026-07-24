@@ -20,7 +20,7 @@ public class UserEventController {
         this.eventService = eventService;
     }
 
-    @PostMapping("/{id}/events")
+    @PostMapping("/{userId}/events")
     public ResponseEntity<EventFullDto> createEventForUser(
             @PathVariable Long id,
             @Valid @RequestBody NewEventDto dto) {
@@ -29,7 +29,7 @@ public class UserEventController {
         return ResponseEntity.status(201).body(full);
     }
 
-    @GetMapping("/{Id}/events")
+    @GetMapping("/{userId}/events")
     public ResponseEntity<List<EventShortDto>> getUserEvents(
             @PathVariable Long userId,
             @RequestParam(defaultValue = "0") int from,

@@ -16,18 +16,13 @@ public class UserController {
         this.participationRequestService = participationRequestService;
     }
 
-    @PostMapping("/{id}/events/{id}/requests")
+    @PostMapping("/{userId}/events/{eventId}/requests")
     public ResponseEntity<ParticipationRequestDto> createRequest(
             @PathVariable Long userId,
             @PathVariable Long eventId,
             @RequestBody CreateRequestDto dto) {
 
-        ParticipationRequestDto result = participationRequestService.createRequest(
-                userId,
-                eventId,
-                dto
-        );
-
+        ParticipationRequestDto result = participationRequestService.createRequest(userId, eventId, dto);
         return ResponseEntity.status(201).body(result);
     }
 }

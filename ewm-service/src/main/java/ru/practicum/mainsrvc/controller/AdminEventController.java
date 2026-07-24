@@ -16,19 +16,19 @@ public class AdminEventController {
         this.eventService = eventService;
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping("/{eventId}")
     public ResponseEntity<EventFullDto> updateEventAdmin(
             @PathVariable Long id,
             @RequestBody UpdateEventRequestDto dto) {
         return ResponseEntity.ok(eventService.updateEvent(id, dto, null));
     }
 
-    @PatchMapping("/{id}/publish")
+    @PatchMapping("/{eventId}/publish")
     public ResponseEntity<EventFullDto> publishEvent(@PathVariable Long eventId) {
         return ResponseEntity.ok(eventService.publishEvent(eventId));
     }
 
-    @PatchMapping("/{id}/cancel")
+    @PatchMapping("/{eventId}/cancel")
     public ResponseEntity<EventFullDto> cancelEvent(@PathVariable Long eventId) {
         return ResponseEntity.ok(eventService.canceledEvent(eventId));
     }
