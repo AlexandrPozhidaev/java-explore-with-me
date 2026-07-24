@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS users (
     name            VARCHAR(255) NOT NULL,
     email           VARCHAR(255) NOT NULL UNIQUE,
     created         TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    active          BOOLEAN NOT NULL DEFAULT TRUE;
+    active          BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 CREATE TABLE IF NOT EXISTS categories (
