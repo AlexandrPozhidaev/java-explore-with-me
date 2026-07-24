@@ -22,10 +22,10 @@ public class UserEventController {
 
     @PostMapping("/{userId}/events")
     public ResponseEntity<EventFullDto> createEventForUser(
-            @PathVariable Long id,
+            @PathVariable Long userId,
             @Valid @RequestBody NewEventDto dto) {
 
-        EventFullDto full = eventService.createEvent(dto, id);
+        EventFullDto full = eventService.createEvent(dto, userId);
         return ResponseEntity.status(201).body(full);
     }
 
@@ -34,6 +34,13 @@ public class UserEventController {
             @PathVariable Long userId,
             @RequestParam(defaultValue = "0") int from,
             @RequestParam(defaultValue = "10") int size) {
+
+        if (from < 0) {
+            throw new IllegalArgumentException("Параметр 'from' должен быть >= 0");
+        }
+        if (size <= 0 || size > 1000) {
+            throw new IllegalArgumentException("Параметр 'size' должен быть в диапазоне (0, 1000]");
+        }
 
         List<EventShortDto> events = eventService.getUserEvents(userId, from, size);
         return ResponseEntity.ok(events);

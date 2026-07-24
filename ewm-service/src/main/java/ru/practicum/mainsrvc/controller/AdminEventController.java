@@ -18,9 +18,9 @@ public class AdminEventController {
 
     @PatchMapping("/{eventId}")
     public ResponseEntity<EventFullDto> updateEventAdmin(
-            @PathVariable Long id,
+            @PathVariable Long eventId,
             @RequestBody UpdateEventRequestDto dto) {
-        return ResponseEntity.ok(eventService.updateEvent(id, dto, null));
+        return ResponseEntity.ok(eventService.updateEvent(eventId, dto, null));
     }
 
     @PatchMapping("/{eventId}/publish")

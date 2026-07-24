@@ -107,7 +107,7 @@ public class EventService {
 
     @Transactional
     public EventFullDto createEvent(NewEventDto dto, Long initiatorId) {
-        var category = categoryRepository.findById(dto.getCategoryId())
+        var category = categoryRepository.findById(dto.getCategory())
                 .orElseThrow(() -> new EntityNotFoundException("Категория не найдена"));
 
         var initiator = userRepository.findById(initiatorId)

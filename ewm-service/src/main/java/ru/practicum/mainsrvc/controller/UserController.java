@@ -1,5 +1,6 @@
 package ru.practicum.mainsrvc.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.mainsrvc.dto.CreateRequestDto;
@@ -14,6 +15,15 @@ public class UserController {
 
     public UserController(ParticipationRequestService participationRequestService) {
         this.participationRequestService = participationRequestService;
+    }
+
+    @PostMapping("/{userId}/requests")
+    public ResponseEntity<ParticipationRequestDto> createRequestWithEventId(
+            @PathVariable Long userId,
+            @RequestParam Long eventId,
+            @Valid @RequestBody CreateRequestDto dto) {
+        return ResponseEntity.status(201)
+                .body(participationRequestService.createRequest(userId, eventId, dto));
     }
 
     @PostMapping("/{userId}/events/{eventId}/requests")

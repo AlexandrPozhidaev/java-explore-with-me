@@ -7,49 +7,35 @@ import jakarta.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 
 public class NewEventDto {
-    @NotBlank
+
+    @NotBlank(message = "Заголовок обязателен")
     private String title;
 
     private String annotation;
 
-    private String description;
+    private String description; // пустая строка допустима
 
-    @NotNull
+    @NotNull(message = "Дата события обязательна")
     private LocalDateTime eventDate;
 
-    @NotNull
-    @PositiveOrZero
+    @NotNull(message = "Лимит участников обязателен")
+    @PositiveOrZero(message = "participantLimit должен быть >= 0")
     private Integer participantLimit;
 
-    @NotNull
+    @NotNull(message = "Флаг pinned обязателен")
     private Boolean pinned;
 
-    @NotNull
+    @NotNull(message = "Флаг paid обязателен")
     private Boolean paid;
 
-    @NotNull
-    private Boolean isRequestModeration;
+    @NotNull(message = "Флаг requestModeration обязателен")
+    private Boolean requestModeration;
 
-    @NotNull
-    private Long categoryId;
+    @NotNull(message = "Категория обязательна")
+    private Long category; // совпадает с JSON: "category": 4
 
-    @NotNull(message = "userId обязателен для создания события")
-    private Long userId;
-
-    public NewEventDto(String title, String annotation, String description, LocalDateTime eventDate,
-                       Integer participantLimit, Boolean pinned, Boolean paid, Boolean isRequestModeration,
-                       Long categoryId, Long userId) {
-        this.title = title;
-        this.annotation = annotation;
-        this.description = description;
-        this.eventDate = eventDate;
-        this.participantLimit = participantLimit;
-        this.pinned = pinned;
-        this.paid = paid;
-        this.isRequestModeration = isRequestModeration;
-        this.categoryId = categoryId;
-        this.userId = userId;
-    }
+    @NotNull(message = "Координаты обязательны")
+    private LocationDto location;
 
     public NewEventDto() {
     }
@@ -111,27 +97,26 @@ public class NewEventDto {
     }
 
     public Boolean getRequestModeration() {
-        return isRequestModeration;
+        return requestModeration;
     }
 
     public void setRequestModeration(Boolean requestModeration) {
-        this.isRequestModeration = requestModeration;
+        this.requestModeration = requestModeration;
     }
 
-    public Long getCategoryId() {
-        return categoryId;
+    public Long getCategory() {
+        return category;
     }
 
-    public void setCategoryId(Long categoryId) {
-        this.categoryId = categoryId;
+    public void setCategory(Long category) {
+        this.category = category;
     }
 
-    // <-- ДОБАВЛЕНО
-    public Long getUserId() {
-        return userId;
+    public LocationDto getLocation() {
+        return location;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setLocation(LocationDto location) {
+        this.location = location;
     }
 }

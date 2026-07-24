@@ -1,12 +1,12 @@
 package ru.practicum.mainsrvc.controller;
 
-import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
-import ru.practicum.mainsrvc.dto.EventFullDto;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.mainsrvc.dto.EventShortDto;
-import ru.practicum.mainsrvc.dto.NewEventDto;
 import ru.practicum.mainsrvc.service.EventService;
 
 import java.util.List;
@@ -40,22 +40,5 @@ public class PublicEventController {
 
         List<EventShortDto> events = eventService.getPublicEvents(categories, paid, text, from, size, sortByDate);
         return ResponseEntity.ok(events);
-    }
-
-    @PostMapping
-    public ResponseEntity<EventShortDto> createEvent(@Valid @RequestBody NewEventDto dto) {
-        EventFullDto full = eventService.createEvent(dto, dto.getUserId());
-
-        EventShortDto shortDto = new EventShortDto();
-        shortDto.setId(full.getId());
-        shortDto.setTitle(full.getTitle());
-        shortDto.setPinned(full.getPinned());
-        shortDto.setPaid(full.getPaid());
-        shortDto.setEventDate(full.getEventDate());
-        shortDto.setViews(full.getViews());
-        shortDto.setCategory(full.getCategory());
-        shortDto.setInitiator(full.getInitiator());
-
-        return ResponseEntity.status(201).body(shortDto);
     }
 }
