@@ -70,4 +70,12 @@ public class Compilation {
     public void setPinned(Boolean pinned) {
         this.pinned = pinned;
     }
+
+    public List<Event> getEvents() {
+        return events;
+    }
+
+    public void setEvents(List<Event> events) {
+        this.events = events;
+    }
 }

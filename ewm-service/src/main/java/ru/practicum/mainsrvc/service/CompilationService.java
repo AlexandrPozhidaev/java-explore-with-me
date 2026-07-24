@@ -118,8 +118,7 @@ public class CompilationService {
     private StatsData collectStatsForCompilations(List<Compilation> comps) {
         Set<Long> eventIds = new HashSet<>();
         for (Compilation c : comps) {
-            for (CompilationEvent ce : c.getEvents()) {
-                Event e = ce.getEvent();
+            for (Event e : c.getEvents()) {
                 if (e != null) {
                     eventIds.add(e.getId());
                 }
@@ -157,8 +156,7 @@ public class CompilationService {
 
     private StatsData collectStatsForCompilation(Compilation c) {
         Set<Long> eventIds = new HashSet<>();
-        for (CompilationEvent ce : c.getEvents()) {
-            Event e = ce.getEvent();
+        for (Event e : c.getEvents()) {
             if (e != null) {
                 eventIds.add(e.getId());
             }
@@ -218,8 +216,7 @@ public class CompilationService {
         dto.setDescription(c.getDescription());
 
         List<EventShortDto> eventsList = new ArrayList<>();
-        for (CompilationEvent ce : c.getEvents()) {
-            Event e = ce.getEvent();
+        for (Event e : c.getEvents()) {
             if (e == null) continue;
             Event mapped = eventMap.get(e.getId());
             if (mapped == null) continue;
