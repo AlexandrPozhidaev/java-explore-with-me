@@ -1,5 +1,6 @@
 package ru.practicum.mainsrvc.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -13,9 +14,10 @@ public class NewEventDto {
 
     private String annotation;
 
-    private String description; // пустая строка допустима
+    private String description;
 
     @NotNull(message = "Дата события обязательна")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "UTC")
     private LocalDateTime eventDate;
 
     @NotNull(message = "Лимит участников обязателен")
