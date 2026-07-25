@@ -27,7 +27,7 @@ public class EventFullDto {
     private Boolean paid;
 
     @NotNull
-    private Boolean RequestModeration;
+    private Boolean requestModeration;
 
     private Long views;
 
@@ -54,7 +54,7 @@ public class EventFullDto {
         this.participantLimit = participantLimit;
         this.pinned = pinned;
         this.paid = paid;
-        this.RequestModeration = requestModeration;
+        this.requestModeration = requestModeration;
         this.views = views;
         this.category = category;
         this.initiator = initiator;
@@ -133,11 +133,11 @@ public class EventFullDto {
     }
 
     public Boolean getRequestModeration() {
-        return RequestModeration;
+        return requestModeration;
     }
 
     public void setRequestModeration(Boolean requestModeration) {
-        RequestModeration = requestModeration;
+        requestModeration = requestModeration;
     }
 
     public Long getViews() {
