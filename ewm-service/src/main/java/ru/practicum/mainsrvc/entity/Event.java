@@ -1,8 +1,6 @@
 package ru.practicum.mainsrvc.entity;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,10 +51,6 @@ public class Event {
 
     @ManyToMany(mappedBy = "events", fetch = FetchType.LAZY)
     private List<Compilation> compilations = new ArrayList<>();
-
-    @Column(name = "created_on", nullable = false, updatable = false)
-    @CreationTimestamp
-    private LocalDateTime createdOn;
 
     public Event() {
     }
@@ -180,13 +174,5 @@ public class Event {
 
     public void setCompilations(List<Compilation> compilations) {
         this.compilations = compilations;
-    }
-
-    public LocalDateTime getCreatedOn() {
-        return createdOn;
-    }
-
-    public void setCreatedOn(LocalDateTime createdOn) {
-        this.createdOn = createdOn;
     }
 }

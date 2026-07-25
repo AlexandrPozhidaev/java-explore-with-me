@@ -60,16 +60,22 @@ public class UserController {
     }
 
     @PostMapping("/{userId}/requests")
-    public ResponseEntity<ParticipationRequestDto> createRequest(
+    public ResponseEntity<ParticipationRequestDto> createRequestWithEventId(
             @PathVariable Long userId,
             @RequestParam Long eventId,
-            @RequestBody(required = false) CreateRequestDto dto) {
+            @Valid @RequestBody CreateRequestDto dto) {
 
-        String comment = (dto != null && dto.getComment() != null)
-                ? dto.getComment()
-                : "";
+        ParticipationRequestDto result = participationRequestService.createRequest(userId, eventId, dto);
+        return ResponseEntity.status(201).body(result);
+    }
 
-        ParticipationRequestDto result = participationRequestService.createRequest(userId, eventId, comment);
+    @PostMapping("/{userId}/events/{eventId}/requests")
+    public ResponseEntity<ParticipationRequestDto> createRequest(
+            @PathVariable Long userId,
+            @PathVariable Long eventId,
+            @RequestBody CreateRequestDto dto) {
+
+        ParticipationRequestDto result = participationRequestService.createRequest(userId, eventId, dto);
         return ResponseEntity.status(201).body(result);
     }
 

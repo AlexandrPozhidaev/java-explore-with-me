@@ -136,7 +136,6 @@ public class EventService {
         event.setCategory(category);
         event.setInitiator(initiator);
         event.setState(EventStatus.PENDING);
-        event.getCreatedOn();
 
         event = eventRepository.save(event);
         return toEventFullDto(event, Collections.emptyMap());
@@ -240,24 +239,15 @@ public class EventService {
         }
 
         String uri = "/events/" + event.getId();
-        long views = 0;
+        List<ViewStatsDto> stats = statClient.getStats(
+                LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC),
+                LocalDateTime.now(),
+                Collections.singletonList(uri),
+                false);
 
-        try {
-            List<ViewStatsDto> stats = statClient.getStats(
-                    LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC),
-                    LocalDateTime.now(),
-                    Collections.singletonList(uri),
-                    false
-            );
-            if (!stats.isEmpty()) {
-                views = stats.get(0).getHits();
-            }
-        } catch (Exception e) {
-            log.warn("Не удалось получить статистику для события id={}, возвращаем 0 просмотров", eventId, e);
-            views = 0;
-        }
-
+        long views = stats.isEmpty() ? 0 : stats.get(0).getHits();
         Map<String, Long> hitsMap = Collections.singletonMap(uri, views);
+
         return toEventFullDto(event, hitsMap);
     }
 
@@ -321,6 +311,8 @@ public class EventService {
         return toEventFullDto(event, Collections.emptyMap());
     }
 
+
+
     @Transactional
     public EventFullDto canceledEvent(Long eventId) {
         Event event = eventRepository.findById(eventId)
@@ -380,8 +372,6 @@ public class EventService {
         dto.setPinned(e.getPinned());
         dto.setPaid(e.getPaid());
         dto.setRequestModeration(e.getRequestModeration());
-        dto.setState(e.getState());
-        dto.setCreatedOn(e.getCreatedOn());
 
         String uri = "/events/" + e.getId();
         dto.setViews(hitsMap.getOrDefault(uri, 0L));

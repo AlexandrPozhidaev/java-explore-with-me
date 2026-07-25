@@ -39,9 +39,7 @@ public class EventFullDto {
 
     private EventStatus state;
 
-    private LocalDateTime createdOn;
-
-    public EventFullDto(Long id, String title, String annotation, String description, LocalDateTime eventDate, Integer participantLimit, Boolean pinned, Boolean paid, Boolean isRequestModeration, Long views, CategoryDto category, UserShortDto initiator, Long confirmedRequests, EventStatus state, LocalDateTime createdOn) {
+    public EventFullDto(Long id, String title, String annotation, String description, LocalDateTime eventDate, Integer participantLimit, Boolean pinned, Boolean paid, Boolean isRequestModeration, Long views, CategoryDto category, UserShortDto initiator, Long confirmedRequests, EventStatus state) {
         this.id = id;
         this.title = title;
         this.annotation = annotation;
@@ -56,7 +54,6 @@ public class EventFullDto {
         this.initiator = initiator;
         this.confirmedRequests = confirmedRequests;
         this.state = state;
-        this. createdOn = createdOn;
     }
 
     public EventFullDto() {
@@ -172,13 +169,5 @@ public class EventFullDto {
 
     public void setState(EventStatus state) {
         this.state = state;
-    }
-
-    public LocalDateTime getCreatedOn() {
-        return createdOn;
-    }
-
-    public void setCreatedOn(LocalDateTime createdOn) {
-        this.createdOn = createdOn;
     }
 }
