@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS events (
     pinned              BOOLEAN DEFAULT false,
     is_request_moderation BOOLEAN DEFAULT false,
     state               VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+    created_on TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
     CONSTRAINT chk_state CHECK (state IN ('PENDING', 'PUBLISHED', 'CANCELED'))
 );

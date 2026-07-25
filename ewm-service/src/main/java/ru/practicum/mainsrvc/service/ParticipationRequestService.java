@@ -5,7 +5,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.mainsrvc.dto.CreateRequestDto;
 import ru.practicum.mainsrvc.dto.ParticipationRequestDto;
 import ru.practicum.mainsrvc.entity.*;
 import ru.practicum.mainsrvc.exception.ConflictException;
@@ -34,7 +33,7 @@ public class ParticipationRequestService {
     }
 
     @Transactional
-    public ParticipationRequestDto createRequest(Long userId, Long eventId, CreateRequestDto dto) {
+    public ParticipationRequestDto createRequest(Long userId, Long eventId, String comment) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
@@ -64,7 +63,7 @@ public class ParticipationRequestService {
         request.setCreated(LocalDateTime.now());
         request.setEvent(event);
         request.setRequesterId(userId);
-        request.setComment(dto.getComment());
+        request.setComment(comment);
 
         if (!event.getRequestModeration()) {
             request.setStatus(RequestStatus.CONFIRMED);

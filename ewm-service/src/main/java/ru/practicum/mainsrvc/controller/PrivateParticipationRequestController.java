@@ -3,7 +3,6 @@ package ru.practicum.mainsrvc.controller;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.mainsrvc.dto.CreateRequestDto;
 import ru.practicum.mainsrvc.dto.ParticipationRequestDto;
 import ru.practicum.mainsrvc.service.ParticipationRequestService;
 
@@ -15,14 +14,6 @@ public class PrivateParticipationRequestController {
 
     public PrivateParticipationRequestController(ParticipationRequestService requestService) {
         this.requestService = requestService;
-    }
-
-    @PostMapping("/{userId}/{eventId}")
-    public ResponseEntity<ParticipationRequestDto> createRequest(
-            @PathVariable Long userId,
-            @PathVariable Long eventId,
-            @RequestBody CreateRequestDto dto) {
-        return ResponseEntity.status(201).body(requestService.createRequest(userId, eventId, dto));
     }
 
     @GetMapping("/user/{userId}")
