@@ -2,6 +2,7 @@ package ru.practicum.mainsrvc.dto;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import ru.practicum.mainsrvc.entity.EventStatus;
 
 import java.time.LocalDateTime;
 
@@ -12,9 +13,11 @@ public class EventFullDto {
     private String title;
 
     private String annotation;
+
     private String description;
 
     private LocalDateTime eventDate;
+
     private Integer participantLimit;
 
     @NotNull
@@ -29,11 +32,14 @@ public class EventFullDto {
     private Long views;
 
     private CategoryDto category;
+
     private UserShortDto initiator;
 
     private Long confirmedRequests;
 
-    public EventFullDto(Long id, String title, String annotation, String description, LocalDateTime eventDate, Integer participantLimit, Boolean pinned, Boolean paid, Boolean isRequestModeration, Long views, CategoryDto category, UserShortDto initiator, Long confirmedRequests) {
+    private EventStatus state;
+
+    public EventFullDto(Long id, String title, String annotation, String description, LocalDateTime eventDate, Integer participantLimit, Boolean pinned, Boolean paid, Boolean isRequestModeration, Long views, CategoryDto category, UserShortDto initiator, Long confirmedRequests, EventStatus state) {
         this.id = id;
         this.title = title;
         this.annotation = annotation;
@@ -47,6 +53,7 @@ public class EventFullDto {
         this.category = category;
         this.initiator = initiator;
         this.confirmedRequests = confirmedRequests;
+        this.state = state;
     }
 
     public EventFullDto() {
@@ -154,5 +161,13 @@ public class EventFullDto {
 
     public void setConfirmedRequests(Long confirmedRequests) {
         this.confirmedRequests = confirmedRequests;
+    }
+
+    public EventStatus getState() {
+        return state;
+    }
+
+    public void setState(EventStatus state) {
+        this.state = state;
     }
 }

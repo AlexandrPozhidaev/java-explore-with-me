@@ -124,6 +124,16 @@ public class UserController {
         return ResponseEntity.ok(eventService.updateEvent(eventId, dto, userId));
     }
 
+    @PatchMapping("/{userId}/events/{eventId}/state")
+    public ResponseEntity<EventFullDto> updateEventState(
+            @PathVariable Long userId,
+            @PathVariable Long eventId,
+            @Valid @RequestBody StateActionDto dto) {
+
+        EventFullDto result = eventService.updateEventState(userId, eventId, dto);
+        return ResponseEntity.ok(result);
+    }
+
     @PatchMapping("/{userId}/requests/{requestId}/cancel")
     public ResponseEntity<ParticipationRequestDto> cancelRequest(
             @PathVariable Long userId,

@@ -1,29 +1,36 @@
 package ru.practicum.mainsrvc.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-
 import java.util.List;
 
-public class NewCompilationDto {
-    @NotBlank
-    @Size(max = 50, message = "Длина title не должна превышать 50 символов")
-    private String title;
-
-    private String description;
-
+public class CompilationCreatedDto {
+    private Long id;
     private boolean pinned;
-
+    private String title;
+    private String description;
     private List<Long> events;
 
-    public NewCompilationDto(String title, String description, boolean pinned, List<Long> events) {
+    public CompilationCreatedDto(Long id, boolean pinned, String title, String description, List<Long> events) {
+        this.id = id;
+        this.pinned = pinned;
         this.title = title;
         this.description = description;
-        this.pinned = pinned;
         this.events = events;
     }
 
-    public NewCompilationDto() {
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public boolean isPinned() {
+        return pinned;
+    }
+
+    public void setPinned(boolean pinned) {
+        this.pinned = pinned;
     }
 
     public String getTitle() {
@@ -40,14 +47,6 @@ public class NewCompilationDto {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public boolean isPinned() {
-        return pinned;
-    }
-
-    public void setPinned(boolean pinned) {
-        this.pinned = pinned;
     }
 
     public List<Long> getEvents() {

@@ -1,5 +1,6 @@
 package ru.practicum.mainsrvc.exception;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +20,7 @@ public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    @ExceptionHandler(EntityNotFoundException.class)
+    @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ErrorResponse> handleEntityNotFound(
             EntityNotFoundException ex,
             HttpServletRequest request) {
@@ -149,6 +150,35 @@ public class GlobalExceptionHandler {
                         String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()),
                         "Внутренняя ошибка сервера",
                         request.getRequestURI()
+                ));
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ErrorResponse> handleForbidden(ForbiddenException ex, HttpServletRequest request) {
+        log.warn("Forbidden [{}] {}: {}",
+                request.getMethod(), request.getRequestURI(), ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ErrorResponse(
+                        String.valueOf(HttpStatus.FORBIDDEN.value()),
+                        ex.getMessage(),
+                        request.getRequestURI()
+                ));
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ErrorResponse> handleConflict(ConflictException ex, HttpServletRequest request) {
+        String path = request != null ? request.getRequestURI() : "/";
+        log.warn("Conflict [{}] {}: {}",
+                request != null ? request.getMethod() : "-",
+                path,
+                ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(
+                        String.valueOf(HttpStatus.CONFLICT.value()),
+                        ex.getMessage(),
+                        path
                 ));
     }
 }

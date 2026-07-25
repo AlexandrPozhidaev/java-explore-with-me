@@ -7,10 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.mainsrvc.dto.CreateRequestDto;
 import ru.practicum.mainsrvc.dto.ParticipationRequestDto;
-import ru.practicum.mainsrvc.entity.Event;
-import ru.practicum.mainsrvc.entity.ParticipationRequest;
-import ru.practicum.mainsrvc.entity.RequestStatus;
-import ru.practicum.mainsrvc.entity.User;
+import ru.practicum.mainsrvc.entity.*;
+import ru.practicum.mainsrvc.exception.ConflictException;
 import ru.practicum.mainsrvc.exception.NotFoundException;
 import ru.practicum.mainsrvc.repository.EventRepository;
 import ru.practicum.mainsrvc.repository.RequestRepository;
@@ -35,6 +33,7 @@ public class ParticipationRequestService {
         this.userRepository = userRepository;
     }
 
+    @Transactional
     public ParticipationRequestDto createRequest(Long userId, Long eventId, CreateRequestDto dto) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
@@ -42,12 +41,36 @@ public class ParticipationRequestService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие не найдено"));
 
+        if (event.getInitiator() != null && event.getInitiator().getId().equals(userId)) {
+            throw new ConflictException("Инициатор события не может подать запрос на участие в собственном событии");
+        }
+
+        if (!event.getState().equals(EventStatus.PUBLISHED)) {
+            throw new ConflictException("Нельзя участвовать в событии, которое не опубликовано");
+        }
+
+        boolean hasActiveRequest = requestRepository.existsByRequesterIdAndEventIdAndStatusNot(
+                userId, eventId, RequestStatus.CANCELLED);
+        if (hasActiveRequest) {
+            throw new ConflictException("Запрос на участие уже существует");
+        }
+
+        long confirmedCount = requestRepository.countConfirmedByEventId(eventId);
+        if (confirmedCount >= event.getParticipantLimit()) {
+            throw new ConflictException("Достигнут лимит участников для этого события");
+        }
+
         ParticipationRequest request = new ParticipationRequest();
         request.setCreated(LocalDateTime.now());
         request.setEvent(event);
         request.setRequesterId(userId);
         request.setComment(dto.getComment());
-        request.setStatus(RequestStatus.PENDING);
+
+        if (!event.getRequestModeration()) {
+            request.setStatus(RequestStatus.CONFIRMED);
+        } else {
+            request.setStatus(RequestStatus.PENDING);
+        }
 
         request = requestRepository.save(request);
         return toDto(request);

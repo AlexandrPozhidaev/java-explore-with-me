@@ -3,6 +3,7 @@ package ru.practicum.mainsrvc.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.mainsrvc.dto.EventFullDto;
+import ru.practicum.mainsrvc.dto.StateActionDto;
 import ru.practicum.mainsrvc.dto.UpdateEventRequestDto;
 import ru.practicum.mainsrvc.service.EventService;
 
@@ -37,13 +38,20 @@ public class AdminEventController {
         return ResponseEntity.ok(eventService.updateEventByAdmin(eventId, dto));
     }
 
-    @PatchMapping("/{eventId}/publish")
-    public ResponseEntity<EventFullDto> publishEvent(@PathVariable Long eventId) {
-        return ResponseEntity.ok(eventService.publishEvent(eventId));
-    }
+    @PatchMapping("/{eventId}/state")
+    public ResponseEntity<EventFullDto> updateEventStateByAdmin(
+            @PathVariable Long eventId,
+            @RequestBody StateActionDto dto) {
 
-    @PatchMapping("/{eventId}/cancel")
-    public ResponseEntity<EventFullDto> cancelEvent(@PathVariable Long eventId) {
-        return ResponseEntity.ok(eventService.canceledEvent(eventId));
+        switch (dto.getStateAction()) {
+            case PUBLISH_EVENT:
+                return ResponseEntity.ok(eventService.publishEvent(eventId));
+            case REJECT_EVENT:
+                return ResponseEntity.ok(eventService.rejectEvent(eventId));
+            default:
+                throw new IllegalArgumentException(
+                        "Неподдерживаемое админское действие: " + dto.getStateAction()
+                );
+        }
     }
 }

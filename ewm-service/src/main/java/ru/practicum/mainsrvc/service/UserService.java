@@ -8,7 +8,7 @@ import ru.practicum.mainsrvc.dto.UserFullDto;
 import ru.practicum.mainsrvc.dto.UserShortDto;
 import ru.practicum.mainsrvc.entity.User;
 import ru.practicum.mainsrvc.exception.ConflictException;
-import ru.practicum.mainsrvc.exception.EntityNotFoundException;
+import ru.practicum.mainsrvc.exception.NotFoundException;
 import ru.practicum.mainsrvc.repository.UserRepository;
 
 import java.util.List;
@@ -55,21 +55,35 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+    public UserShortDto getUserByIdOrNull(Long id) {
+        return userRepository.findById(id)
+                .map(this::toUserShortDtoNoActive)
+                .orElse(null);
+    }
+
     @Transactional
     public UserShortDto activateUser(Long userId) {
         User u = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден: " + userId));
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден: " + userId));
         u.setActive(true);
         u = userRepository.save(u);
-        return toUserShortDto(u);
+        return toUserShortDtoNoActive(u);
     }
 
     @Transactional
     public void deleteUser(Long userId) {
         if (!userRepository.existsById(userId)) {
-            throw new EntityNotFoundException("Пользователь не найден: " + userId);
+            throw new NotFoundException("Пользователь не найден: " + userId);
         }
         userRepository.deleteById(userId);
+    }
+
+    private UserShortDto toUserShortDtoNoActive(User u) {
+        UserShortDto dto = new UserShortDto();
+        dto.setId(u.getId());
+        dto.setName(u.getName());
+        dto.setEmail(u.getEmail());
+        return dto;
     }
 
     private UserShortDto toUserShortDto(User u) {

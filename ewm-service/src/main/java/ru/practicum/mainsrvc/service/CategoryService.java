@@ -6,6 +6,7 @@ import ru.practicum.mainsrvc.dto.CategoryDto;
 import ru.practicum.mainsrvc.dto.NewCategoryDto;
 import ru.practicum.mainsrvc.dto.UpdateCategoryDto;
 import ru.practicum.mainsrvc.entity.Category;
+import ru.practicum.mainsrvc.exception.ConflictException;
 import ru.practicum.mainsrvc.repository.CategoryRepository;
 
 import java.util.List;
@@ -36,7 +37,7 @@ public class CategoryService {
     @Transactional
     public CategoryDto createCategory(NewCategoryDto dto) {
         if (categoryRepository.existsByName(dto.getName())) {
-            throw new IllegalArgumentException("Категория '" + dto.getName() + "' уже существует");
+            throw new ConflictException("Категория '" + dto.getName() + "' уже существует");
         }
         Category c = new Category();
         c.setName(dto.getName());
@@ -51,7 +52,7 @@ public class CategoryService {
 
         if (dto.getName() != null && !dto.getName().equals(c.getName())) {
             if (categoryRepository.existsByName(dto.getName())) {
-                throw new IllegalArgumentException("Категория '" + dto.getName() + "' уже существует");
+                throw new ConflictException("Категория '" + dto.getName() + "' уже существует");
             }
             c.setName(dto.getName());
         }

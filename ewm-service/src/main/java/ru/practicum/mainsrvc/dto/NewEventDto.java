@@ -12,8 +12,10 @@ public class NewEventDto {
     @NotBlank(message = "Заголовок обязателен")
     private String title;
 
+    @NotBlank(message = "Поле 'annotation' обязательно для заполнения и не может состоять только из пробелов")
     private String annotation;
 
+    @NotBlank(message = "Поле 'description' обязательно для заполнения и не может состоять только из пробелов")
     private String description;
 
     @NotNull(message = "Дата события обязательна")

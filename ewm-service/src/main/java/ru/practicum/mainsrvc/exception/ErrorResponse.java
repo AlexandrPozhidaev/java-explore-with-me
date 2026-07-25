@@ -1,27 +1,24 @@
 package ru.practicum.mainsrvc.exception;
 
-import java.time.LocalDateTime;
-
 public class ErrorResponse {
     private String status;
     private String message;
-    private LocalDateTime timestamp;
+    private String timestamp;
     private String path;
 
-    public ErrorResponse() {
-    }
+    public ErrorResponse() {}
 
     public ErrorResponse(String status, String message) {
         this.status = status;
         this.message = message;
-        this.timestamp = LocalDateTime.now();
+        this.timestamp = java.time.ZonedDateTime.now().toString();
     }
 
     public ErrorResponse(String status, String message, String path) {
         this.status = status;
         this.message = message;
-        this.timestamp = LocalDateTime.now();
         this.path = path;
+        this.timestamp = java.time.ZonedDateTime.now().toString();
     }
 
     public String getStatus() {
@@ -40,11 +37,11 @@ public class ErrorResponse {
         this.message = message;
     }
 
-    public LocalDateTime getTimestamp() {
+    public String getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(LocalDateTime timestamp) {
+    public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
     }
 

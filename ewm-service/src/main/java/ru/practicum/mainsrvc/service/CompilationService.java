@@ -7,8 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.ViewStatsDto;
 import ru.practicum.mainsrvc.dto.*;
-import ru.practicum.mainsrvc.entity.*;
-import ru.practicum.mainsrvc.exception.EntityNotFoundException;
+import ru.practicum.mainsrvc.entity.Compilation;
+import ru.practicum.mainsrvc.entity.Event;
+import ru.practicum.mainsrvc.exception.NotFoundException;
 import ru.practicum.mainsrvc.repository.CompilationRepository;
 import ru.practicum.mainsrvc.repository.EventRepository;
 import ru.practicum.statclient.StatClient;
@@ -58,7 +59,7 @@ public class CompilationService {
     @Transactional(readOnly = true)
     public CompilationDto getCompilationById(Long id) {
         Compilation c = compilationRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Compilation not found: " + id));
+                .orElseThrow(() -> new NotFoundException("Compilation not found: " + id));
 
         StatsData statsData = collectStatsForCompilation(c);
 
@@ -66,19 +67,42 @@ public class CompilationService {
     }
 
     @Transactional
-    public CompilationDto createCompilation(NewCompilationDto dto) {
+    public CompilationCreatedDto createCompilation(NewCompilationDto dto) {
         if (compilationRepository.existsByTitle(dto.getTitle())) {
             throw new IllegalArgumentException("Подборка '" + dto.getTitle() + "' уже существует");
         }
+
         Compilation c = new Compilation(dto.getTitle(), dto.getDescription(), dto.isPinned());
         c = compilationRepository.save(c);
-        return toCompilationDto(c, Collections.emptyMap(), Collections.emptyMap());
+
+        if (dto.getEvents() != null && !dto.getEvents().isEmpty()) {
+            List<Event> events = eventRepository.findAllById(dto.getEvents());
+            if (events.size() != dto.getEvents().size()) {
+                throw new NotFoundException("Одно или несколько событий не найдены");
+            }
+            c.getEvents().addAll(events);
+            compilationRepository.save(c); // сохранит связь ManyToMany
+        }
+
+        // Возвращаем DTO только с ID событий
+        List<Long> eventIds = c.getEvents().stream()
+                .filter(Objects::nonNull)
+                .map(Event::getId)
+                .toList();
+
+        return new CompilationCreatedDto(
+                c.getId(),
+                c.getPinned(),
+                c.getTitle(),
+                c.getDescription(),
+                eventIds
+        );
     }
 
     @Transactional
     public CompilationDto updateCompilation(Long compId, UpdateCompilationDto dto) {
         Compilation c = compilationRepository.findById(compId)
-                .orElseThrow(() -> new EntityNotFoundException("Подборка не найдена: " + compId));
+                .orElseThrow(() -> new NotFoundException("Подборка не найдена: " + compId));
 
         if (dto.getTitle() != null && !dto.getTitle().equals(c.getTitle())) {
             if (compilationRepository.existsByTitle(dto.getTitle())) {
@@ -100,7 +124,7 @@ public class CompilationService {
     @Transactional
     public void deleteCompilation(Long compId) {
         if (!compilationRepository.existsById(compId)) {
-            throw new EntityNotFoundException("Подборка не найдена: " + compId);
+            throw new NotFoundException("Подборка не найдена: " + compId);
         }
         compilationRepository.deleteById(compId);
     }

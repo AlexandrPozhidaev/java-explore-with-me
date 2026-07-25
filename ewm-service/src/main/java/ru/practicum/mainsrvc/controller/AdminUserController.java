@@ -8,6 +8,7 @@ import ru.practicum.mainsrvc.dto.UserFullDto;
 import ru.practicum.mainsrvc.dto.UserShortDto;
 import ru.practicum.mainsrvc.service.UserService;
 
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -27,10 +28,21 @@ public class AdminUserController {
     }
 
     @GetMapping
-    public ResponseEntity<List<UserShortDto>> getAllUsers(
+    public ResponseEntity<List<UserShortDto>> getUsers(
+            @RequestParam(required = false) Long ids,
             @RequestParam(defaultValue = "0") int from,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(userService.getAllUsers(from, size));
+
+        if (ids != null) {
+            UserShortDto user = userService.getUserByIdOrNull(ids);
+            if (user == null) {
+                return ResponseEntity.ok(Collections.emptyList());
+            }
+            return ResponseEntity.ok(Collections.singletonList(user));
+        } else {
+            List<UserShortDto> users = userService.getAllUsers(from, size);
+            return ResponseEntity.ok(users);
+        }
     }
 
     @PatchMapping("/{userId}/activate")
