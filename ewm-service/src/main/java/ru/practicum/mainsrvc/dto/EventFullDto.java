@@ -137,7 +137,7 @@ public class EventFullDto {
     }
 
     public void setRequestModeration(Boolean requestModeration) {
-        requestModeration = requestModeration;
+        this.requestModeration = requestModeration;
     }
 
     public Long getViews() {
