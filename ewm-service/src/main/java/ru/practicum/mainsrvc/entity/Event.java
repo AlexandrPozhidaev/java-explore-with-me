@@ -52,6 +52,18 @@ public class Event {
     @ManyToMany(mappedBy = "events", fetch = FetchType.LAZY)
     private List<Compilation> compilations = new ArrayList<>();
 
+    private LocalDateTime createdOn;
+    private LocalDateTime publishedOn;
+
+    private Double locationLat;
+    private Double locationLon;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdOn = LocalDateTime.now();
+        this.state = EventStatus.PENDING;
+    }
+
     public Event() {
     }
 

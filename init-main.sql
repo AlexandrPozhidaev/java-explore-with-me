@@ -24,6 +24,10 @@ CREATE TABLE IF NOT EXISTS events (
     pinned              BOOLEAN DEFAULT false,
     is_request_moderation BOOLEAN DEFAULT false,
     state               VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+    created_on          TIMESTAMP,
+    published_on        TIMESTAMP,
+    location_lat        DOUBLE PRECISION,
+    location_lon        DOUBLE PRECISION
 
     CONSTRAINT chk_state CHECK (state IN ('PENDING', 'PUBLISHED', 'CANCELED'))
 );

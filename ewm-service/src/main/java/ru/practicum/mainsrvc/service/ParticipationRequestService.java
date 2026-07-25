@@ -33,7 +33,6 @@ public class ParticipationRequestService {
         this.userRepository = userRepository;
     }
 
-    @Transactional
     public ParticipationRequestDto createRequest(Long userId, Long eventId, CreateRequestDto dto) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));

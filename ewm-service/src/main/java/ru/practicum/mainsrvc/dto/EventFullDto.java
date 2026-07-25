@@ -27,7 +27,7 @@ public class EventFullDto {
     private Boolean paid;
 
     @NotNull
-    private Boolean isRequestModeration;
+    private Boolean RequestModeration;
 
     private Long views;
 
@@ -39,7 +39,13 @@ public class EventFullDto {
 
     private EventStatus state;
 
-    public EventFullDto(Long id, String title, String annotation, String description, LocalDateTime eventDate, Integer participantLimit, Boolean pinned, Boolean paid, Boolean isRequestModeration, Long views, CategoryDto category, UserShortDto initiator, Long confirmedRequests, EventStatus state) {
+    private LocalDateTime createdOn;
+
+    private LocalDateTime publishedOn;
+
+    private LocationDto location;
+
+    public EventFullDto(Long id, String title, String annotation, String description, LocalDateTime eventDate, Integer participantLimit, Boolean pinned, Boolean paid, Boolean requestModeration, Long views, CategoryDto category, UserShortDto initiator, Long confirmedRequests, EventStatus state, LocalDateTime createdOn, LocalDateTime publishedOn, LocationDto location) {
         this.id = id;
         this.title = title;
         this.annotation = annotation;
@@ -48,12 +54,15 @@ public class EventFullDto {
         this.participantLimit = participantLimit;
         this.pinned = pinned;
         this.paid = paid;
-        this.isRequestModeration = isRequestModeration;
+        this.RequestModeration = requestModeration;
         this.views = views;
         this.category = category;
         this.initiator = initiator;
         this.confirmedRequests = confirmedRequests;
         this.state = state;
+        this.createdOn = createdOn;
+        this.publishedOn = publishedOn;
+        this.location = location;
     }
 
     public EventFullDto() {
@@ -124,11 +133,11 @@ public class EventFullDto {
     }
 
     public Boolean getRequestModeration() {
-        return isRequestModeration;
+        return RequestModeration;
     }
 
     public void setRequestModeration(Boolean requestModeration) {
-        isRequestModeration = requestModeration;
+        RequestModeration = requestModeration;
     }
 
     public Long getViews() {
@@ -169,5 +178,29 @@ public class EventFullDto {
 
     public void setState(EventStatus state) {
         this.state = state;
+    }
+
+    public LocalDateTime getCreatedOn() {
+        return createdOn;
+    }
+
+    public void setCreatedOn(LocalDateTime createdOn) {
+        this.createdOn = createdOn;
+    }
+
+    public LocalDateTime getPublishedOn() {
+        return publishedOn;
+    }
+
+    public void setPublishedOn(LocalDateTime publishedOn) {
+        this.publishedOn = publishedOn;
+    }
+
+    public LocationDto getLocation() {
+        return location;
+    }
+
+    public void setLocation(LocationDto location) {
+        this.location = location;
     }
 }

@@ -24,7 +24,7 @@ public class AdminEventController {
             @RequestParam(defaultValue = "0") int from,
             @RequestParam(defaultValue = "10") int size) {
 
-        if (from < 0 || size <= 0 || size > 100) {
+        if (from < 0 || size <= 0 || size > 1000) {
             throw new IllegalArgumentException("Некорректные параметры пагинации");
         }
 

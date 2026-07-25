@@ -77,26 +77,36 @@ public class EventService {
                 .map(e -> "/events/" + e.getId())
                 .collect(Collectors.toList());
 
-        Map<String, Long> hitsMap;
-        if (!uris.isEmpty()) {
-            LocalDateTime start = LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC);
-            LocalDateTime end = LocalDateTime.now();
-            List<ViewStatsDto> stats = statClient.getStats(start, end, uris, false);
-
-            hitsMap = stats.stream()
-                    .collect(Collectors.toMap(
-                            ViewStatsDto::getUri,
-                            ViewStatsDto::getHits,
-                            (v1, v2) -> v1
-                    ));
-        } else {
-            hitsMap = Collections.emptyMap();
-        }
+        final Map<String, Long> hitsMap = computeHitsMap(uris);
 
         return events.stream()
                 .map(e -> toEventShortDto(e, hitsMap))
                 .collect(Collectors.toList());
     }
+
+    private Map<String, Long> computeHitsMap(List<String> uris) {
+        if (uris == null || uris.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        LocalDateTime start = LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC);
+        LocalDateTime end = LocalDateTime.now();
+
+        try {
+            List<ViewStatsDto> stats = statClient.getStats(start, end, uris, false);
+
+            return stats.stream()
+                    .collect(Collectors.toMap(
+                            ViewStatsDto::getUri,
+                            ViewStatsDto::getHits,
+                            (v1, v2) -> v1
+                    ));
+        } catch (Exception ex) {
+            log.warn("Не удалось получить статистику просмотров для списка событий, возвращаем 0 просмотров", ex);
+            return Collections.emptyMap();
+        }
+    }
+
 
     @Transactional(readOnly = true)
     public EventShortDto getEventShortById(Long eventId) {
@@ -108,9 +118,14 @@ public class EventService {
 
         LocalDateTime start = LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC);
         LocalDateTime end = LocalDateTime.now();
-        List<ViewStatsDto> stats = statClient.getStats(start, end, Collections.singletonList(uri), false);
-        if (!stats.isEmpty()) {
-            hitsMap = Collections.singletonMap(stats.get(0).getUri(), stats.get(0).getHits());
+
+        try {
+            List<ViewStatsDto> stats = statClient.getStats(start, end, Collections.singletonList(uri), false);
+            if (!stats.isEmpty()) {
+                hitsMap = Collections.singletonMap(stats.get(0).getUri(), stats.get(0).getHits());
+            }
+        } catch (Exception ex) {
+            log.warn("Не удалось получить статистику просмотров для события id={}", eventId, ex);
         }
 
         return toEventShortDto(event, hitsMap);
@@ -229,7 +244,7 @@ public class EventService {
         return toEventFullDto(event, Collections.emptyMap());
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = false)
     public EventFullDto getEventFullByIdForPublicWithStats(Long eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие не найдено"));
@@ -239,17 +254,30 @@ public class EventService {
         }
 
         String uri = "/events/" + event.getId();
-        List<ViewStatsDto> stats = statClient.getStats(
-                LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC),
-                LocalDateTime.now(),
-                Collections.singletonList(uri),
-                false);
+        try {
+            statClient.hit(uri, "ewm-service", "unknown-ip");
+        } catch (Exception ex) {
+            log.warn("Не удалось отправить статистику просмотров для события id={}", eventId, ex);
+        }
+
+        List<ViewStatsDto> stats = Collections.emptyList();
+        try {
+            stats = statClient.getStats(
+                    LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC),
+                    LocalDateTime.now(),
+                    Collections.singletonList(uri),
+                    false
+            );
+        } catch (Exception ex) {
+            log.warn("Не удалось получить статистику просмотров для события id={}", eventId, ex);
+        }
 
         long views = stats.isEmpty() ? 0 : stats.get(0).getHits();
         Map<String, Long> hitsMap = Collections.singletonMap(uri, views);
 
         return toEventFullDto(event, hitsMap);
     }
+
 
     @Transactional(readOnly = true)
     public List<EventFullDto> getAdminEventsList(int from, int size) {
@@ -311,24 +339,6 @@ public class EventService {
         return toEventFullDto(event, Collections.emptyMap());
     }
 
-
-
-    @Transactional
-    public EventFullDto canceledEvent(Long eventId) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Событие не найдено"));
-
-        if (event.getState() == EventStatus.CANCELED) {
-            log.warn("Попытка отклонить уже отклоненное событие id={}", eventId);
-        }
-
-        event.setState(EventStatus.CANCELED);
-        event = eventRepository.save(event);
-
-        log.info("Событие id={} успешно отклонено", eventId);
-        return toEventFullDto(event, Collections.emptyMap());
-    }
-
     @Transactional(readOnly = true)
     public List<EventShortDto> getUserEvents(Long userId, int from, int size) {
         if (from < 0 || size <= 0 || size > 1000) {
@@ -372,6 +382,7 @@ public class EventService {
         dto.setPinned(e.getPinned());
         dto.setPaid(e.getPaid());
         dto.setRequestModeration(e.getRequestModeration());
+
 
         String uri = "/events/" + e.getId();
         dto.setViews(hitsMap.getOrDefault(uri, 0L));
