@@ -1,12 +1,11 @@
 package ru.practicum.mainsrvc.controller;
 
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.mainsrvc.dto.CreateRequestDto;
 import ru.practicum.mainsrvc.dto.ParticipationRequestDto;
 import ru.practicum.mainsrvc.service.ParticipationRequestService;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/private/requests")
@@ -27,8 +26,20 @@ public class PrivateParticipationRequestController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<ParticipationRequestDto>> getRequestsByUser(@PathVariable Long userId) {
-        return ResponseEntity.ok(requestService.getRequestsByUser(userId));
+    public ResponseEntity<Page<ParticipationRequestDto>> getRequestsByUser(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0") int from,
+            @RequestParam(defaultValue = "10") int size) {
+
+        if (from < 0) {
+            throw new IllegalArgumentException("Параметр 'from' должен быть >= 0");
+        }
+        if (size <= 0 || size > 1000) {
+            throw new IllegalArgumentException("Параметр 'size' должен быть в диапазоне (0, 1000]");
+        }
+
+        Page<ParticipationRequestDto> page = requestService.getRequestsByUser(userId, from, size);
+        return ResponseEntity.ok(page);
     }
 
     @PatchMapping("/approve/{requestId}")

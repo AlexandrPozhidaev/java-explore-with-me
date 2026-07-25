@@ -6,6 +6,8 @@ import ru.practicum.mainsrvc.dto.EventFullDto;
 import ru.practicum.mainsrvc.dto.UpdateEventRequestDto;
 import ru.practicum.mainsrvc.service.EventService;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/admin/events")
 public class AdminEventController {
@@ -16,11 +18,23 @@ public class AdminEventController {
         this.eventService = eventService;
     }
 
+    @GetMapping
+    public ResponseEntity<List<EventFullDto>> getAdminEvents(
+            @RequestParam(defaultValue = "0") int from,
+            @RequestParam(defaultValue = "10") int size) {
+
+        if (from < 0 || size <= 0 || size > 100) {
+            throw new IllegalArgumentException("Некорректные параметры пагинации");
+        }
+
+        return ResponseEntity.ok(eventService.getAdminEventsList(from, size));
+    }
+
     @PatchMapping("/{eventId}")
     public ResponseEntity<EventFullDto> updateEventAdmin(
             @PathVariable Long eventId,
             @RequestBody UpdateEventRequestDto dto) {
-        return ResponseEntity.ok(eventService.updateEvent(eventId, dto, null));
+        return ResponseEntity.ok(eventService.updateEventByAdmin(eventId, dto));
     }
 
     @PatchMapping("/{eventId}/publish")

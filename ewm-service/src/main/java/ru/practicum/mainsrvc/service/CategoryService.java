@@ -26,6 +26,13 @@ public class CategoryService {
                 .collect(Collectors.toList());
     }
 
+    public CategoryDto getById(Long id) {
+        Category c = categoryRepository.findById(id)
+                .orElseThrow(() -> new org.springframework.dao.EmptyResultDataAccessException(
+                        "Категория с ID " + id + " не найдена", 1));
+        return toCategoryDto(c);
+    }
+
     @Transactional
     public CategoryDto createCategory(NewCategoryDto dto) {
         if (categoryRepository.existsByName(dto.getName())) {

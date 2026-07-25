@@ -7,6 +7,7 @@ public class NewCompilationDto {
     private String title;
 
     private String description;
+
     private boolean pinned;
 
     public NewCompilationDto(String title, String description, boolean pinned) {

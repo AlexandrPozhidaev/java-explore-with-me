@@ -2,10 +2,8 @@ package ru.practicum.mainsrvc.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import ru.practicum.mainsrvc.dto.EventFullDto;
 import ru.practicum.mainsrvc.dto.EventShortDto;
 import ru.practicum.mainsrvc.service.EventService;
 
@@ -40,5 +38,11 @@ public class PublicEventController {
 
         List<EventShortDto> events = eventService.getPublicEvents(categories, paid, text, from, size, sortByDate);
         return ResponseEntity.ok(events);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<EventFullDto> getEventById(@PathVariable Long id) {
+        EventFullDto dto = eventService.getEventFullByIdForPublicWithStats(id);
+        return ResponseEntity.ok(dto);
     }
 }

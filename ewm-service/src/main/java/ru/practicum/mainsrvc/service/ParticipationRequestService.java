@@ -1,5 +1,8 @@
 package ru.practicum.mainsrvc.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.mainsrvc.dto.CreateRequestDto;
@@ -50,9 +53,10 @@ public class ParticipationRequestService {
         return toDto(request);
     }
 
-    public List<ParticipationRequestDto> getRequestsByUser(Long userId) {
-        var requests = requestRepository.findAllByRequesterId(userId);
-        return requests.stream().map(this::toDto).collect(Collectors.toList());
+    public Page<ParticipationRequestDto> getRequestsByUser(Long userId, int from, int size) {
+        Pageable pageable = PageRequest.of(from, size);
+        Page<ParticipationRequest> requests = requestRepository.findAllByRequesterId(userId, pageable);
+        return requests.map(this::toDto);
     }
 
     public List<ParticipationRequestDto> getRequestsForEvent(Long eventId) {
@@ -76,7 +80,7 @@ public class ParticipationRequestService {
         return toDto(req);
     }
 
-    public ParticipationRequestDto rejectRequestByInitiator(Long requestId, Long initiatorId) {
+    public ParticipationRequestDto approveOrReject(Long requestId, Long initiatorId, RequestStatus status) {
         ParticipationRequest req = requestRepository.findById(requestId)
                 .orElseThrow(() -> new IllegalArgumentException("Запрос не найден"));
 
@@ -84,10 +88,27 @@ public class ParticipationRequestService {
         Long eventInitiatorId = event.getInitiator() != null ? event.getInitiator().getId() : null;
 
         if (!Objects.equals(eventInitiatorId, initiatorId)) {
-            throw new IllegalStateException("Только инициатор события может отклонить запрос");
+            throw new IllegalStateException("Только инициатор события может изменить статус запроса");
         }
 
-        req.setStatus(RequestStatus.REJECTED);
+        req.setStatus(status);
+        req = requestRepository.save(req);
+        return toDto(req);
+    }
+
+    public ParticipationRequestDto cancelRequest(Long userId, Long requestId) {
+        ParticipationRequest req = requestRepository.findById(requestId)
+                .orElseThrow(() -> new NotFoundException("Заявка не найдена"));
+
+        if (!Objects.equals(req.getRequesterId(), userId)) {
+            throw new IllegalStateException("Пользователь может отменять только свои заявки");
+        }
+
+        if (req.getStatus() == RequestStatus.CONFIRMED) {
+            throw new IllegalStateException("Нельзя отменить подтверждённую заявку");
+        }
+
+        req.setStatus(RequestStatus.CANCELLED);
         req = requestRepository.save(req);
         return toDto(req);
     }
@@ -101,5 +122,11 @@ public class ParticipationRequestService {
         dto.setComment(r.getComment());
         dto.setStatus(r.getStatus());
         return dto;
+    }
+
+    public Page<ParticipationRequestDto> getRequestsByUserAndEvent(Long userId, Long eventId, int from, int size) {
+        Pageable pageable = PageRequest.of(from, size);
+        Page<ParticipationRequest> requests = requestRepository.findAllByRequesterIdAndEventId(userId, eventId, pageable);
+        return requests.map(this::toDto);
     }
 }

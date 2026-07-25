@@ -154,6 +154,30 @@ public class EventService {
         return toEventFullDto(event, Collections.emptyMap());
     }
 
+    @Transactional
+    public EventFullDto updateEventByAdmin(Long eventId, UpdateEventRequestDto dto) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException("Событие не найдено"));
+
+        if (dto.getTitle() != null) event.setTitle(dto.getTitle());
+        if (dto.getAnnotation() != null) event.setAnnotation(dto.getAnnotation());
+        if (dto.getDescription() != null) event.setDescription(dto.getDescription());
+        if (dto.getEventDate() != null) event.setEventDate(dto.getEventDate());
+        if (dto.getParticipantLimit() != null) event.setParticipantLimit(dto.getParticipantLimit());
+        if (dto.getPinned() != null) event.setPinned(dto.getPinned());
+        if (dto.getPaid() != null) event.setPaid(dto.getPaid());
+        if (dto.getRequestModeration() != null)
+            event.setRequestModeration(dto.getRequestModeration());
+        if (dto.getCategoryId() != null) {
+            var category = categoryRepository.findById(dto.getCategoryId())
+                    .orElseThrow(() -> new EntityNotFoundException("Категория не найдена"));
+            event.setCategory(category);
+        }
+
+        event = eventRepository.save(event);
+        return toEventFullDto(event, Collections.emptyMap());
+    }
+
     @Transactional(readOnly = true)
     public EventFullDto getEventFullByIdForUser(Long eventId, Long userId) {
         Event event = eventRepository.findById(eventId)
@@ -163,6 +187,42 @@ public class EventService {
             throw new EntityNotFoundException("Не хватает прав на просмотр страницы");
         }
         return toEventFullDto(event, Collections.emptyMap());
+    }
+
+    @Transactional(readOnly = true)
+    public EventFullDto getEventFullByIdForPublicWithStats(Long eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException("Событие не найдено"));
+
+        if (event.getState() != EventStatus.PUBLISHED) {
+            throw new EntityNotFoundException("Событие ещё не опубликовано");
+        }
+
+        String uri = "/events/" + event.getId();
+        List<ViewStatsDto> stats = statClient.getStats(
+                LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC),
+                LocalDateTime.now(),
+                Collections.singletonList(uri),
+                false);
+
+        long views = stats.isEmpty() ? 0 : stats.get(0).getHits();
+        Map<String, Long> hitsMap = Collections.singletonMap(uri, views);
+
+        return toEventFullDto(event, hitsMap);
+    }
+
+    @Transactional(readOnly = true)
+    public List<EventFullDto> getAdminEventsList(int from, int size) {
+        if (from < 0 || size <= 0 || size > 100) {
+            throw new IllegalArgumentException("Некорректные параметры пагинации");
+        }
+
+        var pageRequest = PageRequest.of(from, size);
+        var pageResult = eventRepository.findAll(pageRequest);
+
+        return pageResult.getContent().stream()
+                .map(e -> toEventFullDto(e, Collections.emptyMap()))
+                .toList();
     }
 
     @Transactional

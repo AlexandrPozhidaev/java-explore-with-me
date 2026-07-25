@@ -24,7 +24,6 @@ public class NewEventDto {
     @PositiveOrZero(message = "participantLimit должен быть >= 0")
     private Integer participantLimit;
 
-    @NotNull(message = "Флаг pinned обязателен")
     private Boolean pinned;
 
     @NotNull(message = "Флаг paid обязателен")
