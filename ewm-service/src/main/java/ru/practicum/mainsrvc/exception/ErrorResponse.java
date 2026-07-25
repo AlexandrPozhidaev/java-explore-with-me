@@ -6,7 +6,8 @@ public class ErrorResponse {
     private String timestamp;
     private String path;
 
-    public ErrorResponse() {}
+    public ErrorResponse() {
+    }
 
     public ErrorResponse(String status, String message) {
         this.status = status;
