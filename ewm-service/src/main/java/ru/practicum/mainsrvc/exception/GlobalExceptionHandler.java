@@ -128,15 +128,6 @@ public class GlobalExceptionHandler {
                 ));
     }
 
-    @ExceptionHandler(ConflictException.class)
-    public ResponseEntity<ErrorResponse> handleConflict(ConflictException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(new ErrorResponse(
-                        String.valueOf(HttpStatus.CONFLICT.value()),
-                        ex.getMessage(),
-                        "/")); // если request недоступен, можно оставить заглушку
-    }
-
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(
             Exception ex,
