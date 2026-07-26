@@ -1,6 +1,5 @@
 package ru.practicum.mainsrvc.exception;
 
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,8 +20,8 @@ public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleEntityNotFound(
-            EntityNotFoundException ex,
+    public ResponseEntity<ErrorResponse> handleNotFound(
+            NotFoundException ex,
             HttpServletRequest request) {
 
         log.warn("Not found [{}] {}: {}",

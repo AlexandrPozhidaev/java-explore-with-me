@@ -84,7 +84,6 @@ public class CompilationService {
             compilationRepository.save(c); // сохранит связь ManyToMany
         }
 
-        // Возвращаем DTO только с ID событий
         List<Long> eventIds = c.getEvents().stream()
                 .filter(Objects::nonNull)
                 .map(Event::getId)

@@ -3,6 +3,7 @@ package ru.practicum.mainsrvc.service;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -57,8 +58,8 @@ public class EventService {
     public List<EventShortDto> getPublicEvents(List<Long> categories, Boolean paid,
                                                String text, int from, int size,
                                                boolean sortByDate) {
-        if (from < 0 || size <= 0 || size > 100) {
-            throw new IllegalArgumentException("Некорректные параметры пагинации: from >= 0, 0 < size <= 100");
+        if (from < 0 || size <= 0 || size > 1000) {
+            throw new IllegalArgumentException("Некорректные параметры пагинации: from >= 0, 0 < size <= 1000");
         }
 
         int page = from / size;
@@ -139,6 +140,35 @@ public class EventService {
         var initiator = userRepository.findById(initiatorId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
+        LocalDateTime eventDate = dto.getEventDate();
+        LocalDateTime minDate = LocalDateTime.now().plusHours(2);
+        if (eventDate.isBefore(minDate)) {
+            throw new IllegalArgumentException(
+                    "Дата события должна быть не ранее чем через 2 часа от текущего времени"
+            );
+        }
+
+        String description = dto.getDescription();
+        if (description == null || description.length() < 20) {
+            throw new IllegalArgumentException(
+                    "Описание события должно содержать не менее 20 символов"
+            );
+        }
+
+        String annotation = dto.getAnnotation();
+        if (annotation == null || annotation.length() < 20 || annotation.length() > 2000) {
+            throw new IllegalArgumentException(
+                    "Аннотация события должна содержать от 20 до 2000 символов"
+            );
+        }
+
+        String title = dto.getTitle();
+        if (title == null || title.length() < 3 || title.length() > 120) {
+            throw new IllegalArgumentException(
+                    "Заголовок события должен содержать от 3 до 120 символов"
+            );
+        }
+
         Event event = new Event();
         event.setTitle(dto.getTitle());
         event.setAnnotation(dto.getAnnotation());
@@ -160,6 +190,27 @@ public class EventService {
     public EventFullDto updateEvent(Long eventId, UpdateEventRequestDto dto, Long initiatorId) {
         Event event = eventRepository.findByIdAndInitiator(eventId, initiatorId)
                 .orElseThrow(() -> new NotFoundException("Событие не найдено"));
+
+        String title = dto.getTitle();
+        if (title != null && (title.length() < 3 || title.length() > 120)) {
+            throw new IllegalArgumentException(
+                    "Заголовок должен содержать от 3 до 120 символов"
+            );
+        }
+
+        String description = dto.getDescription();
+        if (description != null && (description.length() < 20 || description.length() > 7000)) {
+            throw new IllegalArgumentException(
+                    "Описание должно содержать от 20 до 7000 символов"
+            );
+        }
+
+        String annotation = dto.getAnnotation();
+        if (annotation != null && (annotation.length() < 20 || annotation.length() > 2000)) {
+            throw new IllegalArgumentException(
+                    "Аннотация должна содержать от 20 до 2000 символов"
+            );
+        }
 
         if (dto.getTitle() != null) event.setTitle(dto.getTitle());
         if (dto.getAnnotation() != null) event.setAnnotation(dto.getAnnotation());
@@ -184,6 +235,35 @@ public class EventService {
     public EventFullDto updateEventByAdmin(Long eventId, UpdateEventRequestDto dto) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие не найдено"));
+
+        if (!EventStatus.PENDING.equals(event.getState())) {
+            throw new IllegalArgumentException(
+                    "Событие должно находиться в состоянии PENDING для изменения администратором"
+            );
+        }
+
+        if (event.getPublishedOn() != null) {
+            LocalDateTime minEventDate = event.getPublishedOn().minusHours(1);
+            if (dto.getEventDate() != null && dto.getEventDate().isBefore(minEventDate)) {
+                throw new IllegalArgumentException(
+                        "Дата события не может быть раньше чем за 1 час до даты публикации"
+                );
+            }
+        }
+
+        String title = dto.getTitle();
+        if (title == null || title.length() < 3 || title.length() > 120) {
+            throw new IllegalArgumentException(
+                    "Заголовок должен содержать от 3 до 120 символов"
+            );
+        }
+
+        String description = dto.getDescription();
+        if (description == null || description.length() < 20 || description.length() > 7000) {
+            throw new IllegalArgumentException(
+                    "Описание должно содержать от 20 до 7000 символов"
+            );
+        }
 
         if (dto.getTitle() != null) event.setTitle(dto.getTitle());
         if (dto.getAnnotation() != null) event.setAnnotation(dto.getAnnotation());
@@ -217,14 +297,16 @@ public class EventService {
             case SEND_TO_REVIEW:
                 event.setState(EventStatus.PENDING);
                 break;
+
             case CANCEL:
-                if (!event.getState().equals(EventStatus.PENDING)) {
+                if (event.getState() != EventStatus.PENDING) {
                     throw new IllegalArgumentException(
                             "Отклонить можно только событие в состоянии ожидания модерации (PENDING)"
                     );
                 }
                 event.setState(EventStatus.CANCELED);
                 break;
+
             default:
                 throw new IllegalArgumentException("Неизвестное действие");
         }
@@ -281,7 +363,7 @@ public class EventService {
 
     @Transactional(readOnly = true)
     public List<EventFullDto> getAdminEventsList(int from, int size) {
-        if (from < 0 || size <= 0 || size > 100) {
+        if (from < 0 || size <= 0 || size > 1000) {
             throw new IllegalArgumentException("Некорректные параметры пагинации");
         }
 
@@ -291,6 +373,40 @@ public class EventService {
         return pageResult.getContent().stream()
                 .map(e -> toEventFullDto(e, Collections.emptyMap()))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<EventFullDto> getAdminEventsWithFilters(
+            List<EventStatus> states,
+            LocalDateTime rangeStart,
+            LocalDateTime rangeEnd,
+            int from,
+            int size,
+            List<Long> users,
+            List<Long> categories) {
+
+        if (from < 0 || size <= 0 || size > 1000) {
+            throw new IllegalArgumentException("Некорректные параметры пагинации");
+        }
+
+        PageRequest pageRequest = PageRequest.of(from, size);
+
+        List<String> statesStrings = states != null
+                ? states.stream().map(Enum::name).collect(Collectors.toList())
+                : null;
+
+        Page<Event> page = eventRepository.findByAdminFilters(
+                statesStrings,
+                rangeStart,
+                rangeEnd,
+                users,
+                categories,
+                pageRequest
+        );
+
+        return page.getContent().stream()
+                .map(e -> toEventFullDto(e, Collections.emptyMap()))
+                .collect(Collectors.toList());
     }
 
     @Transactional
@@ -382,7 +498,7 @@ public class EventService {
         dto.setPinned(e.getPinned());
         dto.setPaid(e.getPaid());
         dto.setRequestModeration(e.getRequestModeration());
-
+        dto.setState(e.getState());
 
         String uri = "/events/" + e.getId();
         dto.setViews(hitsMap.getOrDefault(uri, 0L));

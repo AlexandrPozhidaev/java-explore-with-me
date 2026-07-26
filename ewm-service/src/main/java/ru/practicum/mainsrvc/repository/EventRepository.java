@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import ru.practicum.mainsrvc.entity.Event;
 import ru.practicum.mainsrvc.entity.EventStatus;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,6 +17,21 @@ import java.util.Optional;
 public interface EventRepository extends JpaRepository<Event, Long> {
 
     Optional<Event> findByIdAndState(Long id, EventStatus state);
+
+    @Query("SELECT e FROM Event e " +
+            "WHERE (:states IS NULL OR e.state IN :states) " +
+            "AND (:rangeStart IS NULL OR e.eventDate >= :rangeStart) " +
+            "AND (:rangeEnd IS NULL OR e.eventDate <= :rangeEnd) " +
+            "AND (:users IS NULL OR e.initiator.id IN :users) " +
+            "AND (:categories IS NULL OR e.category.id IN :categories)")
+    Page<Event> findByAdminFilters(
+            @Param("states") List<String> states,
+            @Param("rangeStart") LocalDateTime rangeStart,
+            @Param("rangeEnd") LocalDateTime rangeEnd,
+            @Param("users") List<Long> users,
+            @Param("categories") List<Long> categories,
+            Pageable pageable
+    );
 
     @Query("SELECT e FROM Event e " +
             "WHERE e.state = 'PUBLISHED' " +

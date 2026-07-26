@@ -1,6 +1,7 @@
 package ru.practicum.mainsrvc.entity;
 
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -67,9 +68,7 @@ public class Event {
     public Event() {
     }
 
-    public Event(Long id, String title, String annotation, String description, LocalDateTime eventDate,
-                 Category category, User initiator, Boolean paid, Integer participantLimit,
-                 Boolean pinned, Boolean requestModeration, EventStatus state) {
+    public Event(Long id, String title, String annotation, String description, LocalDateTime eventDate, Category category, User initiator, Boolean paid, Integer participantLimit, Boolean pinned, Boolean requestModeration, EventStatus state, List<Compilation> compilations, LocalDateTime createdOn, LocalDateTime publishedOn, Double locationLat, Double locationLon) {
         this.id = id;
         this.title = title;
         this.annotation = annotation;
@@ -82,6 +81,11 @@ public class Event {
         this.pinned = pinned;
         this.requestModeration = requestModeration;
         this.state = state;
+        this.compilations = compilations;
+        this.createdOn = createdOn;
+        this.publishedOn = publishedOn;
+        this.locationLat = locationLat;
+        this.locationLon = locationLon;
     }
 
     public Long getId() {
@@ -186,5 +190,37 @@ public class Event {
 
     public void setCompilations(List<Compilation> compilations) {
         this.compilations = compilations;
+    }
+
+    public LocalDateTime getCreatedOn() {
+        return createdOn;
+    }
+
+    public void setCreatedOn(LocalDateTime createdOn) {
+        this.createdOn = createdOn;
+    }
+
+    public LocalDateTime getPublishedOn() {
+        return publishedOn;
+    }
+
+    public void setPublishedOn(LocalDateTime publishedOn) {
+        this.publishedOn = publishedOn;
+    }
+
+    public Double getLocationLat() {
+        return locationLat;
+    }
+
+    public void setLocationLat(Double locationLat) {
+        this.locationLat = locationLat;
+    }
+
+    public Double getLocationLon() {
+        return locationLon;
+    }
+
+    public void setLocationLon(Double locationLon) {
+        this.locationLon = locationLon;
     }
 }

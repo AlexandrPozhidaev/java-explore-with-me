@@ -5,9 +5,12 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.mainsrvc.dto.EventFullDto;
 import ru.practicum.mainsrvc.dto.StateActionDto;
 import ru.practicum.mainsrvc.dto.UpdateEventRequestDto;
+import ru.practicum.mainsrvc.entity.EventStatus;
 import ru.practicum.mainsrvc.service.EventService;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/admin/events")
@@ -21,14 +24,26 @@ public class AdminEventController {
 
     @GetMapping
     public ResponseEntity<List<EventFullDto>> getAdminEvents(
+            @RequestParam(required = false) List<String> states,
+            @RequestParam(required = false) LocalDateTime rangeStart,
+            @RequestParam(required = false) LocalDateTime rangeEnd,
             @RequestParam(defaultValue = "0") int from,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) List<Long> users,
+            @RequestParam(required = false) List<Long> categories) {
 
-        if (from < 0 || size <= 0 || size > 1000) {
-            throw new IllegalArgumentException("Некорректные параметры пагинации");
+        List<EventStatus> statusList = null;
+        if (states != null && !states.isEmpty()) {
+            statusList = states.stream()
+                    .map(EventStatus::valueOf)
+                    .collect(Collectors.toList());
         }
 
-        return ResponseEntity.ok(eventService.getAdminEventsList(from, size));
+        List<EventFullDto> events = eventService.getAdminEventsWithFilters(
+                statusList, rangeStart, rangeEnd, from, size, users, categories
+        );
+
+        return ResponseEntity.ok(events);
     }
 
     @PatchMapping("/{eventId}")

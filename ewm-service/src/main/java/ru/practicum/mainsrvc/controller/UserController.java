@@ -116,22 +116,22 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}/events/{eventId}")
-    public ResponseEntity<EventFullDto> updateEventForUser(
+    public ResponseEntity<EventFullDto> updateEventUser(
             @PathVariable Long userId,
             @PathVariable Long eventId,
-            @Valid @RequestBody UpdateEventRequestDto dto) {
+            @RequestBody UpdateEventRequestDto dto) {   // без @Valid: валидация длин всё равно в сервисе
 
-        return ResponseEntity.ok(eventService.updateEvent(eventId, dto, userId));
+        var result = eventService.updateEvent(eventId, dto, userId);
+        return ResponseEntity.ok(result);
     }
 
-    @PatchMapping("/{userId}/events/{eventId}/state")
-    public ResponseEntity<EventFullDto> updateEventState(
+    @PatchMapping("/users/{userId}/events/{eventId}")
+    public EventFullDto updateEventState(
             @PathVariable Long userId,
             @PathVariable Long eventId,
-            @Valid @RequestBody StateActionDto dto) {
+            @RequestBody StateActionDto stateActionDto) {
 
-        EventFullDto result = eventService.updateEventState(userId, eventId, dto);
-        return ResponseEntity.ok(result);
+        return eventService.updateEventState(userId, eventId, stateActionDto);
     }
 
     @PatchMapping("/{userId}/requests/{requestId}/cancel")
