@@ -55,11 +55,22 @@ public class EventService {
     }
 
     @Transactional(readOnly = true)
-    public List<EventShortDto> getPublicEvents(List<Long> categories, Boolean paid,
-                                               String text, int from, int size,
-                                               boolean sortByDate) {
+    public List<EventShortDto> getPublicEvents(
+            List<Long> categories,
+            Boolean paid,
+            String text,
+            LocalDateTime rangeStart,
+            LocalDateTime rangeEnd,
+            int from,
+            int size,
+            boolean sortByDate) {
+
         if (from < 0 || size <= 0 || size > 1000) {
             throw new IllegalArgumentException("Некорректные параметры пагинации: from >= 0, 0 < size <= 1000");
+        }
+
+        if (rangeStart == null) {
+            rangeStart = LocalDateTime.now();
         }
 
         int page = from / size;
@@ -71,7 +82,14 @@ public class EventService {
                 ? null
                 : categories;
 
-        var pageResult = eventRepository.findPublished(categoryIdsFilter, paid, text, PageRequest.of(page, size, sort));
+        var pageResult = eventRepository.findPublished(
+                categoryIdsFilter,
+                paid,
+                text,
+                rangeStart,
+                rangeEnd,
+                PageRequest.of(page, size, sort)
+        );
         List<Event> events = pageResult.getContent();
 
         List<String> uris = events.stream()
@@ -212,11 +230,20 @@ public class EventService {
             );
         }
 
+        Integer participantLimit = dto.getParticipantLimit();
+        if (participantLimit != null && participantLimit < 0) {
+            throw new IllegalArgumentException("participantLimit не может быть отрицательным");
+        }
+
         if (dto.getTitle() != null) event.setTitle(dto.getTitle());
         if (dto.getAnnotation() != null) event.setAnnotation(dto.getAnnotation());
         if (dto.getDescription() != null) event.setDescription(dto.getDescription());
         if (dto.getEventDate() != null) event.setEventDate(dto.getEventDate());
-        if (dto.getParticipantLimit() != null) event.setParticipantLimit(dto.getParticipantLimit());
+
+        if (participantLimit != null) {
+            event.setParticipantLimit(participantLimit);
+        }
+
         if (dto.getPinned() != null) event.setPinned(dto.getPinned());
         if (dto.getPaid() != null) event.setPaid(dto.getPaid());
         if (dto.getRequestModeration() != null)
@@ -242,9 +269,9 @@ public class EventService {
             );
         }
 
-        if (event.getPublishedOn() != null) {
+        if (event.getPublishedOn() != null && dto.getEventDate() != null) {
             LocalDateTime minEventDate = event.getPublishedOn().minusHours(1);
-            if (dto.getEventDate() != null && dto.getEventDate().isBefore(minEventDate)) {
+            if (dto.getEventDate().isBefore(minEventDate)) {
                 throw new IllegalArgumentException(
                         "Дата события не может быть раньше чем за 1 час до даты публикации"
                 );
@@ -252,28 +279,43 @@ public class EventService {
         }
 
         String title = dto.getTitle();
-        if (title == null || title.length() < 3 || title.length() > 120) {
-            throw new IllegalArgumentException(
-                    "Заголовок должен содержать от 3 до 120 символов"
-            );
+        if (title != null) {
+            if (title.length() < 3 || title.length() > 120) {
+                throw new IllegalArgumentException("Заголовок должен содержать от 3 до 120 символов");
+            }
+            event.setTitle(title);
         }
 
         String description = dto.getDescription();
-        if (description == null || description.length() < 20 || description.length() > 7000) {
-            throw new IllegalArgumentException(
-                    "Описание должно содержать от 20 до 7000 символов"
-            );
+        if (description != null) {
+            if (description.length() < 20 || description.length() > 7000) {
+                throw new IllegalArgumentException("Описание должно содержать от 20 до 7000 символов");
+            }
+            event.setDescription(description);
         }
 
-        if (dto.getTitle() != null) event.setTitle(dto.getTitle());
-        if (dto.getAnnotation() != null) event.setAnnotation(dto.getAnnotation());
-        if (dto.getDescription() != null) event.setDescription(dto.getDescription());
+        String annotation = dto.getAnnotation();
+        if (annotation != null) {
+            if (annotation.length() < 20 || annotation.length() > 2000) {
+                throw new IllegalArgumentException("Аннотация должна содержать от 20 до 2000 символов");
+            }
+            event.setAnnotation(annotation);
+        }
+
+        Integer participantLimit = dto.getParticipantLimit();
+        if (participantLimit != null) {
+            if (participantLimit < 0) {
+                throw new IllegalArgumentException("participantLimit не может быть отрицательным");
+            }
+            event.setParticipantLimit(participantLimit);
+        }
+
         if (dto.getEventDate() != null) event.setEventDate(dto.getEventDate());
-        if (dto.getParticipantLimit() != null) event.setParticipantLimit(dto.getParticipantLimit());
         if (dto.getPinned() != null) event.setPinned(dto.getPinned());
         if (dto.getPaid() != null) event.setPaid(dto.getPaid());
         if (dto.getRequestModeration() != null)
             event.setRequestModeration(dto.getRequestModeration());
+
         if (dto.getCategoryId() != null) {
             var category = categoryRepository.findById(dto.getCategoryId())
                     .orElseThrow(() -> new NotFoundException("Категория не найдена"));
@@ -283,6 +325,7 @@ public class EventService {
         event = eventRepository.save(event);
         return toEventFullDto(event, Collections.emptyMap());
     }
+
 
     @Transactional
     public EventFullDto updateEventState(Long userId, Long eventId, StateActionDto dto) {

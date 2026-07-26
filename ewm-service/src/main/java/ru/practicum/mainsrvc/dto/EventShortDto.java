@@ -1,17 +1,13 @@
 package ru.practicum.mainsrvc.dto;
 
-import jakarta.validation.constraints.NotNull;
-
 import java.time.LocalDateTime;
 
 public class EventShortDto {
     private Long id;
     private String title;
 
-    @NotNull
     private Boolean pinned;
 
-    @NotNull
     private Boolean paid;
 
     private Long views;

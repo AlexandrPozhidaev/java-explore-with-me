@@ -37,11 +37,15 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             "WHERE e.state = 'PUBLISHED' " +
             "AND (:categoryIds IS NULL OR e.category.id IN :categoryIds) " +
             "AND (:paid IS NULL OR e.paid = :paid) " +
-            "AND (:text IS NULL OR (LOWER(e.title) LIKE LOWER(:text) OR LOWER(e.annotation) LIKE LOWER(:text)))")
+            "AND (:text IS NULL OR (LOWER(e.title) LIKE LOWER(:text) OR LOWER(e.annotation) LIKE LOWER(:text))) " +
+            "AND (:rangeStart IS NULL OR e.eventDate >= :rangeStart) " +
+            "AND (:rangeEnd IS NULL OR e.eventDate <= :rangeEnd)")
     Page<Event> findPublished(
             List<Long> categoryIds,
             Boolean paid,
             String text,
+            LocalDateTime rangeStart,
+            LocalDateTime rangeEnd,
             Pageable pageable
     );
 

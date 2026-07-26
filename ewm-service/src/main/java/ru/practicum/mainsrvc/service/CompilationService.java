@@ -73,7 +73,6 @@ public class CompilationService {
         }
 
         Compilation c = new Compilation(dto.getTitle(), dto.getDescription(), dto.isPinned());
-        c = compilationRepository.save(c);
 
         if (dto.getEvents() != null && !dto.getEvents().isEmpty()) {
             List<Event> events = eventRepository.findAllById(dto.getEvents());
@@ -81,8 +80,9 @@ public class CompilationService {
                 throw new NotFoundException("Одно или несколько событий не найдены");
             }
             c.getEvents().addAll(events);
-            compilationRepository.save(c); // сохранит связь ManyToMany
         }
+
+        c = compilationRepository.save(c);
 
         List<Long> eventIds = c.getEvents().stream()
                 .filter(Objects::nonNull)

@@ -1,5 +1,7 @@
 package ru.practicum.mainsrvc.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.mainsrvc.dto.CategoryDto;
@@ -8,9 +10,6 @@ import ru.practicum.mainsrvc.dto.UpdateCategoryDto;
 import ru.practicum.mainsrvc.entity.Category;
 import ru.practicum.mainsrvc.exception.ConflictException;
 import ru.practicum.mainsrvc.repository.CategoryRepository;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class CategoryService {
@@ -21,10 +20,8 @@ public class CategoryService {
         this.categoryRepository = categoryRepository;
     }
 
-    public List<CategoryDto> getAllCategories() {
-        return categoryRepository.findAll().stream()
-                .map(this::toCategoryDto)
-                .collect(Collectors.toList());
+    public Page<Category> getCategoriesPage(Pageable pageable) {
+        return categoryRepository.findAll(pageable);
     }
 
     public CategoryDto getById(Long id) {
@@ -36,6 +33,10 @@ public class CategoryService {
 
     @Transactional
     public CategoryDto createCategory(NewCategoryDto dto) {
+        String name = dto.getName();
+        if (name == null || name.length() < 1 || name.length() > 50) {
+            throw new IllegalArgumentException("Длина имени категории должна быть от 1 до 50 символов");
+        }
         if (categoryRepository.existsByName(dto.getName())) {
             throw new ConflictException("Категория '" + dto.getName() + "' уже существует");
         }
@@ -47,6 +48,10 @@ public class CategoryService {
 
     @Transactional
     public CategoryDto updateCategory(Long catId, UpdateCategoryDto dto) {
+        String name = dto.getName();
+        if (name == null || name.length() < 1 || name.length() > 50) {
+            throw new IllegalArgumentException("Длина имени категории должна быть от 1 до 50 символов");
+        }
         Category c = categoryRepository.findById(catId)
                 .orElseThrow(() -> new org.springframework.dao.EmptyResultDataAccessException("Категория не найдена", 1));
 

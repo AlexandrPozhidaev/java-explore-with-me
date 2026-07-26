@@ -7,6 +7,7 @@ import ru.practicum.mainsrvc.dto.EventFullDto;
 import ru.practicum.mainsrvc.dto.EventShortDto;
 import ru.practicum.mainsrvc.service.EventService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -25,19 +26,16 @@ public class PublicEventController {
             @RequestParam(required = false) List<Long> categories,
             @RequestParam(required = false) Boolean paid,
             @RequestParam(required = false) String text,
+            @RequestParam(required = false) LocalDateTime rangeStart,
+            @RequestParam(required = false) LocalDateTime rangeEnd,
             @RequestParam(defaultValue = "0") int from,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "false") boolean sortByDate) {
+            @RequestParam(defaultValue = "true") boolean sortByDate) {
 
-        if (from < 0) {
-            throw new IllegalArgumentException("Параметр 'from' должен быть >= 0");
-        }
-        if (size <= 0 || size > 100) {
-            throw new IllegalArgumentException("Параметр 'size' должен быть в диапазоне (0, 100]");
-        }
+        List<EventShortDto> result = eventService.getPublicEvents(
+                categories, paid, text, rangeStart, rangeEnd, from, size, sortByDate);
 
-        List<EventShortDto> events = eventService.getPublicEvents(categories, paid, text, from, size, sortByDate);
-        return ResponseEntity.ok(events);
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/{id}")

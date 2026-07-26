@@ -26,6 +26,17 @@ public class UserService {
 
     @Transactional
     public UserFullDto createUser(UserFullDto dto) {
+
+        String name = dto.getName();
+        if (name == null || name.length() < 2 || name.length() > 250) {
+            throw new IllegalArgumentException("Длина имени должна быть от 2 до 250 символов");
+        }
+
+        String email = dto.getEmail();
+        if (email == null || email.length() < 6 || email.length() < 254) {
+            throw new IllegalArgumentException("Длина email должна быть от 6 до 254 символов");
+        }
+
         if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
             throw new ConflictException("Пользователь с таким email уже существует");
         }
