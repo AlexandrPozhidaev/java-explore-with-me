@@ -74,15 +74,22 @@ public class EventService {
             rangeStart = LocalDateTime.now();
         }
 
-        List<Long> categoryIdsFilter = (categories == null || categories.isEmpty())
-                ? null
-                : categories;
+        String textPattern = null;
+        if (text != null && !text.isBlank()) {
+            textPattern = "%" + text.toLowerCase() + "%";
+        }
 
         Sort sort = Sort.by("eventDate").ascending();
         PageRequest pageRequest = PageRequest.of(from, size, sort);
 
-        var pageResult = eventRepository.findPublished(
-                categoryIdsFilter, paid, text, rangeStart, rangeEnd, pageRequest);
+        Page<Event> pageResult;
+        if (categories == null || categories.isEmpty()) {
+            pageResult = eventRepository.findPublishedWithoutCategories(
+                    paid, text, textPattern, rangeStart, rangeEnd, pageRequest);
+        } else {
+            pageResult = eventRepository.findPublishedWithCategories(
+                    categories, paid, text, textPattern, rangeStart, rangeEnd, pageRequest);
+        }
 
         List<Event> events = pageResult.getContent();
 
@@ -101,11 +108,12 @@ public class EventService {
 
         List<EventShortDto> result = new ArrayList<>(events.size());
         for (Event e : events) {
-            result.add(toEventShortDto(e, hitsMap));
+            EventShortDto dto = toEventShortDto(e, hitsMap);
+            result.add(dto);
         }
+
         return result;
     }
-
 
     @Transactional(readOnly = true)
     public EventShortDto getEventShortById(Long eventId) {
@@ -172,10 +180,13 @@ public class EventService {
         event.setAnnotation(dto.getAnnotation());
         event.setDescription(dto.getDescription());
         event.setEventDate(dto.getEventDate());
-        event.setParticipantLimit(dto.getParticipantLimit());
-        event.setPinned(dto.getPinned());
-        event.setPaid(dto.getPaid());
-        event.setRequestModeration(dto.getRequestModeration());
+
+        event.setPaid(dto.getPaid() != null ? dto.getPaid() : false);
+        event.setParticipantLimit(dto.getParticipantLimit() != null ? dto.getParticipantLimit() : 0);
+        event.setRequestModeration(dto.getRequestModeration() != null ? dto.getRequestModeration() : true);
+
+        event.setPinned(dto.getPinned() != null ? dto.getPinned() : false); // тоже можно сделать с дефолтом
+
         event.setCategory(category);
         event.setInitiator(initiator);
         event.setState(EventStatus.PENDING);
@@ -183,6 +194,7 @@ public class EventService {
         event = eventRepository.save(event);
         return toEventFullDto(event, Collections.emptyMap());
     }
+
 
     @Transactional
     public EventFullDto updateEvent(Long eventId, UpdateEventRequestDto dto, Long initiatorId) {
@@ -425,23 +437,38 @@ public class EventService {
 
         PageRequest pageRequest = PageRequest.of(from, size);
 
-        List<String> statesStrings = states != null
-                ? states.stream().map(Enum::name).collect(Collectors.toList())
-                : null;
+        List<String> statesStrings;
+        if (states == null || states.isEmpty()) {
+            statesStrings = Collections.emptyList();
+        } else {
+            statesStrings = new ArrayList<>(states.size());
+            for (EventStatus s : states) {
+                statesStrings.add(s.name());
+            }
+        }
+
+        List<Long> usersList = (users == null) ? Collections.emptyList() : users;
+        List<Long> categoriesList = (categories == null) ? Collections.emptyList() : categories;
 
         Page<Event> page = eventRepository.findByAdminFilters(
                 statesStrings,
                 rangeStart,
                 rangeEnd,
-                users,
-                categories,
+                usersList,
+                categoriesList,
                 pageRequest
         );
 
-        return page.getContent().stream()
-                .map(e -> toEventFullDto(e, Collections.emptyMap()))
-                .collect(Collectors.toList());
+        List<Event> events = page.getContent();
+        List<EventFullDto> result = new ArrayList<>(events.size());
+
+        for (Event e : events) {
+            result.add(toEventFullDto(e, Collections.emptyMap()));
+        }
+
+        return result;
     }
+
 
     @Transactional
     public EventFullDto publishEvent(Long eventId) {

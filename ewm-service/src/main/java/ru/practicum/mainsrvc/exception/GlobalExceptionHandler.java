@@ -1,6 +1,7 @@
 package ru.practicum.mainsrvc.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -192,6 +193,21 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(
                         String.valueOf(HttpStatus.BAD_REQUEST.value()),
                         "Ошибка запроса к базе данных: " + message,
+                        request.getRequestURI()
+                ));
+    }
+
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<ErrorResponse> handleValidationException(
+            ValidationException ex,
+            HttpServletRequest request) {
+        log.warn("Ошибка валидации [{}] {}: {}",
+                request.getMethod(), request.getRequestURI(), ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(
+                        String.valueOf(HttpStatus.BAD_REQUEST.value()),
+                        ex.getMessage(),
                         request.getRequestURI()
                 ));
     }

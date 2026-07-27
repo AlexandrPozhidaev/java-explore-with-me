@@ -145,7 +145,6 @@ public class CompilationService {
         return toCompilationDto(c, Collections.emptyMap(), Collections.emptyMap());
     }
 
-
     @Transactional
     public void deleteCompilation(Long compId) {
         if (!compilationRepository.existsById(compId)) {

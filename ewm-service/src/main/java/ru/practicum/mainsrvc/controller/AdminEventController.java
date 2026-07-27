@@ -10,8 +10,8 @@ import ru.practicum.mainsrvc.entity.EventStatus;
 import ru.practicum.mainsrvc.service.EventService;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/admin/events")
@@ -34,10 +34,12 @@ public class AdminEventController {
             @RequestParam(required = false) List<Long> categories) {
 
         List<EventStatus> statusList = null;
+
         if (states != null && !states.isEmpty()) {
-            statusList = states.stream()
-                    .map(EventStatus::valueOf)
-                    .collect(Collectors.toList());
+            statusList = new ArrayList<>(states.size());
+            for (String s : states) {
+                statusList.add(EventStatus.valueOf(s));
+            }
         }
 
         List<EventFullDto> events = eventService.getAdminEventsWithFilters(
