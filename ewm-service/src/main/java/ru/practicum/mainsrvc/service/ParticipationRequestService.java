@@ -140,7 +140,7 @@ public class ParticipationRequestService {
         dto.setId(r.getId());
         dto.setCreated(r.getCreated());
         dto.setEventId(r.getEvent().getId());
-        dto.setRequesterId(r.getRequesterId());
+        dto.setRequester(r.getRequesterId());
         dto.setComment(r.getComment());
         dto.setStatus(r.getStatus());
         return dto;

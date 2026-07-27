@@ -15,7 +15,7 @@ public class ParticipationRequestDto {
     public ParticipationRequestDto(Long id, Long requester, Long event, String comment, RequestStatus status, LocalDateTime created) {
         this.id = id;
         this.requester = requester;
-        this.eventId = eventId;
+        this.eventId = event;
         this.comment = comment;
         this.status = status;
         this.created = created;
@@ -32,12 +32,12 @@ public class ParticipationRequestDto {
         this.id = id;
     }
 
-    public Long getRequesterId() {
+    public Long getRequester() {        // исправлено: было getRequesterId()
         return requester;
     }
 
-    public void setRequesterId(Long requesterId) {
-        this.requester = requesterId;
+    public void setRequester(Long requester) {   // исправлено: было setRequesterId
+        this.requester = requester;
     }
 
     public Long getEventId() {
