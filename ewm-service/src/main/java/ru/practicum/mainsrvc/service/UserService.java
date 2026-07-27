@@ -12,7 +12,6 @@ import ru.practicum.mainsrvc.exception.NotFoundException;
 import ru.practicum.mainsrvc.repository.UserRepository;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,24 +25,24 @@ public class UserService {
 
     @Transactional
     public UserFullDto createUser(UserFullDto dto) {
-
+        // Валидация имени
         String name = dto.getName();
         if (name == null || name.length() < 2 || name.length() > 250) {
             throw new IllegalArgumentException("Длина имени должна быть от 2 до 250 символов");
         }
 
         String email = dto.getEmail();
-        if (email == null || email.length() < 6 || email.length() < 254) {
+        if (email == null || email.length() < 6 || email.length() > 254) {
             throw new IllegalArgumentException("Длина email должна быть от 6 до 254 символов");
         }
 
-        if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
+        if (userRepository.findByEmail(email).isPresent()) {
             throw new ConflictException("Пользователь с таким email уже существует");
         }
 
         User user = new User();
-        user.setName(dto.getName());
-        user.setEmail(dto.getEmail());
+        user.setName(name);
+        user.setEmail(email);
         user.setActive(false);
 
         User saved = userRepository.save(user);
@@ -53,23 +52,26 @@ public class UserService {
 
     public List<UserShortDto> getAllUsers(int from, int size) {
         if (from < 0) {
-            throw new IllegalArgumentException("Поле не может быть отрицательным");
+            throw new IllegalArgumentException("Смещение (from) не может быть отрицательным");
         }
         if (size <= 0 || size > 1000) {
-            throw new IllegalArgumentException("Значение должно быть не более 1000");
+            throw new IllegalArgumentException("Размер страницы (size) должен быть от 1 до 1000");
         }
 
-        var pageRequest = PageRequest.of(from, size, Sort.unsorted());
-        var users = userRepository.findAll(pageRequest).getContent();
+        // Используем сортировку по ID, чтобы порядок записей был стабильным
+        var pageRequest = PageRequest.of(from, size, Sort.by(Sort.Direction.ASC, "id"));
+        var usersPage = userRepository.findAll(pageRequest);
+        var users = usersPage.getContent();
+
         return users.stream()
                 .map(this::toUserShortDto)
                 .collect(Collectors.toList());
     }
 
-    public UserShortDto getUserByIdOrNull(Long id) {
+    public UserShortDto getUserById(Long id) {
         return userRepository.findById(id)
-                .map(this::toUserShortDtoNoActive)
-                .orElse(null);
+                .map(this::toUserShortDto)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден: " + id));
     }
 
     @Transactional
@@ -78,7 +80,7 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден: " + userId));
         u.setActive(true);
         u = userRepository.save(u);
-        return toUserShortDtoNoActive(u);
+        return toUserShortDto(u);
     }
 
     @Transactional
@@ -89,20 +91,12 @@ public class UserService {
         userRepository.deleteById(userId);
     }
 
-    private UserShortDto toUserShortDtoNoActive(User u) {
-        UserShortDto dto = new UserShortDto();
-        dto.setId(u.getId());
-        dto.setName(u.getName());
-        dto.setEmail(u.getEmail());
-        return dto;
-    }
-
     private UserShortDto toUserShortDto(User u) {
         return new UserShortDto(
                 u.getId(),
                 u.getName(),
                 u.getEmail(),
-                Objects.requireNonNullElse(u.getActive(), false)
+                Boolean.TRUE.equals(u.getActive())
         );
     }
 }

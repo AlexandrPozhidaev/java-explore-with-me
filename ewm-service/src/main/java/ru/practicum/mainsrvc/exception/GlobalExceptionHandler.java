@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -169,6 +170,29 @@ public class GlobalExceptionHandler {
                         String.valueOf(HttpStatus.CONFLICT.value()),
                         ex.getMessage(),
                         path
+                ));
+    }
+
+    @ExceptionHandler(InvalidDataAccessResourceUsageException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidDataAccess(
+            InvalidDataAccessResourceUsageException ex,
+            HttpServletRequest request) {
+
+        Throwable rootCause = ex.getRootCause();
+        String message = rootCause != null ? rootCause.getMessage() : ex.getMessage();
+
+        log.error("SQL-ошибка [{}] {}: {}, SQL: {}",
+                request.getMethod(),
+                request.getRequestURI(),
+                message,
+                ex.getMessage(),
+                ex);
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(
+                        String.valueOf(HttpStatus.BAD_REQUEST.value()),
+                        "Ошибка запроса к базе данных: " + message,
+                        request.getRequestURI()
                 ));
     }
 }
