@@ -6,15 +6,15 @@ import java.time.LocalDateTime;
 
 public class ParticipationRequestDto {
     private Long id;
-    private Long requesterId;
+    private Long requester;
     private Long eventId;
     private String comment;
     private RequestStatus status;
     private LocalDateTime created;
 
-    public ParticipationRequestDto(Long id, Long requesterId, Long eventId, String comment, RequestStatus status, LocalDateTime created) {
+    public ParticipationRequestDto(Long id, Long requester, Long event, String comment, RequestStatus status, LocalDateTime created) {
         this.id = id;
-        this.requesterId = requesterId;
+        this.requester = requester;
         this.eventId = eventId;
         this.comment = comment;
         this.status = status;
@@ -33,11 +33,11 @@ public class ParticipationRequestDto {
     }
 
     public Long getRequesterId() {
-        return requesterId;
+        return requester;
     }
 
     public void setRequesterId(Long requesterId) {
-        this.requesterId = requesterId;
+        this.requester = requesterId;
     }
 
     public Long getEventId() {

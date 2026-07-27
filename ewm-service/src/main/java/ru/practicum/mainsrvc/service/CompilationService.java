@@ -1,7 +1,9 @@
 package ru.practicum.mainsrvc.service;
 
+import jakarta.validation.ValidationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,6 +11,7 @@ import ru.practicum.dto.ViewStatsDto;
 import ru.practicum.mainsrvc.dto.*;
 import ru.practicum.mainsrvc.entity.Compilation;
 import ru.practicum.mainsrvc.entity.Event;
+import ru.practicum.mainsrvc.exception.ConflictException;
 import ru.practicum.mainsrvc.exception.NotFoundException;
 import ru.practicum.mainsrvc.repository.CompilationRepository;
 import ru.practicum.mainsrvc.repository.EventRepository;
@@ -37,17 +40,28 @@ public class CompilationService {
 
     @Transactional(readOnly = true)
     public List<CompilationDto> getPublicCompilations(Boolean pinned, int from, int size) {
-        if (from < 0 || size <= 0) {
-            throw new IllegalArgumentException("from must be >= 0 and size > 0");
+        if (from < 0) {
+            throw new ConflictException("Параметр from не может быть отрицательным");
+        }
+        if (size <= 0 || size > 1000) {
+            throw new ConflictException("Параметр size должен быть больше 0 и не более 1000");
         }
 
-        int page = from / size;
         Sort sort = pinned != null
                 ? Sort.by("pinned").descending().and(Sort.by("id").ascending())
                 : Sort.by("id").ascending();
 
-        Page<Compilation> compsPage = compilationRepository.findAll(PageRequest.of(page, size, sort));
+        int page = from / size;
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Compilation> compsPage = compilationRepository.findAllOrByPinned(pinned, pageable);
         List<Compilation> comps = compsPage.getContent();
+
+        int skip = from % size;
+        if (skip > 0 && !comps.isEmpty()) {
+            int startIndex = Math.min(skip, comps.size());
+            comps = comps.subList(startIndex, comps.size());
+        }
 
         StatsData statsData = collectStatsForCompilations(comps);
 
@@ -55,6 +69,7 @@ public class CompilationService {
                 .map(c -> toCompilationDto(c, statsData.eventMap, statsData.hitsMap))
                 .collect(Collectors.toList());
     }
+
 
     @Transactional(readOnly = true)
     public CompilationDto getCompilationById(Long id) {
@@ -69,10 +84,13 @@ public class CompilationService {
     @Transactional
     public CompilationCreatedDto createCompilation(NewCompilationDto dto) {
         if (compilationRepository.existsByTitle(dto.getTitle())) {
-            throw new IllegalArgumentException("Подборка '" + dto.getTitle() + "' уже существует");
+            throw new ConflictException("Подборка '" + dto.getTitle() + "' уже существует");
         }
 
-        Compilation c = new Compilation(dto.getTitle(), dto.getDescription(), dto.isPinned());
+        Compilation c = new Compilation();
+        c.setTitle(dto.getTitle());
+        c.setDescription(dto.getDescription());
+        c.setPinned(dto.isPinned());
 
         if (dto.getEvents() != null && !dto.getEvents().isEmpty()) {
             List<Event> events = eventRepository.findAllById(dto.getEvents());
@@ -84,10 +102,7 @@ public class CompilationService {
 
         c = compilationRepository.save(c);
 
-        List<Long> eventIds = c.getEvents().stream()
-                .filter(Objects::nonNull)
-                .map(Event::getId)
-                .toList();
+        List<Long> eventIds = dto.getEvents() == null ? List.of() : dto.getEvents();
 
         return new CompilationCreatedDto(
                 c.getId(),
@@ -98,20 +113,30 @@ public class CompilationService {
         );
     }
 
+
     @Transactional
     public CompilationDto updateCompilation(Long compId, UpdateCompilationDto dto) {
         Compilation c = compilationRepository.findById(compId)
                 .orElseThrow(() -> new NotFoundException("Подборка не найдена: " + compId));
 
         if (dto.getTitle() != null && !dto.getTitle().equals(c.getTitle())) {
-            if (compilationRepository.existsByTitle(dto.getTitle())) {
-                throw new IllegalArgumentException("Подборка '" + dto.getTitle() + "' уже существует");
+            String newTitle = dto.getTitle();
+
+            if (newTitle.length() < 3 || newTitle.length() > 50) {
+                throw new ValidationException("Заголовок должен содержать от 3 до 50 символов");
             }
-            c.setTitle(dto.getTitle());
+
+            if (compilationRepository.existsByTitle(newTitle)) {
+                throw new ConflictException("Подборка с таким заголовком уже существует");
+            }
+
+            c.setTitle(newTitle);
         }
+
         if (dto.getDescription() != null) {
             c.setDescription(dto.getDescription());
         }
+
         if (dto.getPinned() != null) {
             c.setPinned(dto.getPinned());
         }
@@ -119,6 +144,7 @@ public class CompilationService {
         c = compilationRepository.save(c);
         return toCompilationDto(c, Collections.emptyMap(), Collections.emptyMap());
     }
+
 
     @Transactional
     public void deleteCompilation(Long compId) {

@@ -12,7 +12,9 @@ import ru.practicum.dto.ViewStatsDto;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class StatClient {
@@ -44,7 +46,7 @@ public class StatClient {
 
         if (uris != null && !uris.isEmpty()) {
             for (String u : uris) {
-                builder.queryParam("uris", u); // передаём как отдельные параметры
+                builder.queryParam("uris", u);
             }
         }
 
@@ -55,5 +57,19 @@ public class StatClient {
                 new ParameterizedTypeReference<List<ViewStatsDto>>() {}
         );
         return response.getBody();
+    }
+
+    public Map<String, Long> getHits(List<String> uris) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime start = now.minusYears(10);
+        LocalDateTime end = now.plusYears(10);
+
+        List<ViewStatsDto> stats = getStats(start, end, uris, false);
+
+        Map<String, Long> result = new HashMap<>();
+        for (ViewStatsDto s : stats) {
+            result.put(s.getUri(), s.getHits());
+        }
+        return result;
     }
 }

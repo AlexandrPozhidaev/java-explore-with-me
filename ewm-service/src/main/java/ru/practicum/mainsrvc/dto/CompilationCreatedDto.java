@@ -4,12 +4,12 @@ import java.util.List;
 
 public class CompilationCreatedDto {
     private Long id;
-    private boolean pinned;
+    private Boolean pinned;
     private String title;
     private String description;
     private List<Long> events;
 
-    public CompilationCreatedDto(Long id, boolean pinned, String title, String description, List<Long> events) {
+    public CompilationCreatedDto(Long id, Boolean pinned, String title, String description, List<Long> events) {
         this.id = id;
         this.pinned = pinned;
         this.title = title;
@@ -25,11 +25,11 @@ public class CompilationCreatedDto {
         this.id = id;
     }
 
-    public boolean isPinned() {
+    public Boolean isPinned() {
         return pinned;
     }
 
-    public void setPinned(boolean pinned) {
+    public void setPinned(Boolean pinned) {
         this.pinned = pinned;
     }
 

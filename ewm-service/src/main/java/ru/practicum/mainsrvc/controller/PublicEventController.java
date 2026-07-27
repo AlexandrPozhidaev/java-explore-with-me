@@ -29,11 +29,25 @@ public class PublicEventController {
             @RequestParam(required = false) LocalDateTime rangeStart,
             @RequestParam(required = false) LocalDateTime rangeEnd,
             @RequestParam(defaultValue = "0") int from,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "true") boolean sortByDate) {
+            @RequestParam(defaultValue = "10") int size) {
+
+        if (text != null && text.isBlank()) {
+            text = null;
+        }
+
+        if (rangeStart != null && rangeEnd != null && rangeEnd.isBefore(rangeStart)) {
+            throw new IllegalArgumentException("rangeEnd не может быть раньше rangeStart");
+        }
+
+        if (from < 0) {
+            throw new IllegalArgumentException("from не может быть отрицательным");
+        }
+        if (size <= 0 || size > 1000) {
+            throw new IllegalArgumentException("size должен быть от 1 до 1000");
+        }
 
         List<EventShortDto> result = eventService.getPublicEvents(
-                categories, paid, text, rangeStart, rangeEnd, from, size, sortByDate);
+                categories, paid, text, rangeStart, rangeEnd, from, size);
 
         return ResponseEntity.ok(result);
     }

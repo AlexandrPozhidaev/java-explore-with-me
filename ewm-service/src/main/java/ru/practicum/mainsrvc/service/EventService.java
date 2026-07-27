@@ -1,6 +1,7 @@
 package ru.practicum.mainsrvc.service;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -25,6 +26,7 @@ import ru.practicum.statclient.StatClient;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -62,68 +64,46 @@ public class EventService {
             LocalDateTime rangeStart,
             LocalDateTime rangeEnd,
             int from,
-            int size,
-            boolean sortByDate) {
+            int size) {
 
         if (from < 0 || size <= 0 || size > 1000) {
-            throw new IllegalArgumentException("Некорректные параметры пагинации: from >= 0, 0 < size <= 1000");
+            throw new IllegalArgumentException("Некорректные параметры пагинации");
         }
 
         if (rangeStart == null) {
             rangeStart = LocalDateTime.now();
         }
 
-        int page = from / size;
-        Sort sort = sortByDate
-                ? Sort.by("eventDate").ascending()
-                : Sort.unsorted();
-
         List<Long> categoryIdsFilter = (categories == null || categories.isEmpty())
                 ? null
                 : categories;
 
+        Sort sort = Sort.by("eventDate").ascending();
+        PageRequest pageRequest = PageRequest.of(from, size, sort);
+
         var pageResult = eventRepository.findPublished(
-                categoryIdsFilter,
-                paid,
-                text,
-                rangeStart,
-                rangeEnd,
-                PageRequest.of(page, size, sort)
-        );
+                categoryIdsFilter, paid, text, rangeStart, rangeEnd, pageRequest);
+
         List<Event> events = pageResult.getContent();
 
-        List<String> uris = events.stream()
-                .map(e -> "/events/" + e.getId())
-                .collect(Collectors.toList());
-
-        final Map<String, Long> hitsMap = computeHitsMap(uris);
-
-        return events.stream()
-                .map(e -> toEventShortDto(e, hitsMap))
-                .collect(Collectors.toList());
-    }
-
-    private Map<String, Long> computeHitsMap(List<String> uris) {
-        if (uris == null || uris.isEmpty()) {
-            return Collections.emptyMap();
-        }
-
-        LocalDateTime start = LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC);
-        LocalDateTime end = LocalDateTime.now();
-
+        Map<String, Long> hitsMap = Collections.emptyMap();
         try {
-            List<ViewStatsDto> stats = statClient.getStats(start, end, uris, false);
-
-            return stats.stream()
-                    .collect(Collectors.toMap(
-                            ViewStatsDto::getUri,
-                            ViewStatsDto::getHits,
-                            (v1, v2) -> v1
-                    ));
+            if (!events.isEmpty()) {
+                List<String> uris = new ArrayList<>(events.size());
+                for (Event e : events) {
+                    uris.add("/events/" + e.getId());
+                }
+                hitsMap = statClient.getHits(uris);
+            }
         } catch (Exception ex) {
-            log.warn("Не удалось получить статистику просмотров для списка событий, возвращаем 0 просмотров", ex);
-            return Collections.emptyMap();
+            log.warn("Не удалось получить статистику просмотров, возвращаем 0 для views", ex);
         }
+
+        List<EventShortDto> result = new ArrayList<>(events.size());
+        for (Event e : events) {
+            result.add(toEventShortDto(e, hitsMap));
+        }
+        return result;
     }
 
 
@@ -264,24 +244,28 @@ public class EventService {
                 .orElseThrow(() -> new NotFoundException("Событие не найдено"));
 
         if (!EventStatus.PENDING.equals(event.getState())) {
-            throw new IllegalArgumentException(
-                    "Событие должно находиться в состоянии PENDING для изменения администратором"
-            );
+            throw new ConflictException("Событие должно находиться в состоянии PENDING для изменения администратором");
         }
 
-        if (event.getPublishedOn() != null && dto.getEventDate() != null) {
-            LocalDateTime minEventDate = event.getPublishedOn().minusHours(1);
-            if (dto.getEventDate().isBefore(minEventDate)) {
-                throw new IllegalArgumentException(
-                        "Дата события не может быть раньше чем за 1 час до даты публикации"
-                );
+        if (dto.getEventDate() != null) {
+            LocalDateTime now = LocalDateTime.now();
+            if (dto.getEventDate().isBefore(now)) {
+                throw new ValidationException("Дата события не может быть в прошлом");
+            }
+
+            if (event.getPublishedOn() != null) {
+                LocalDateTime minEventDate = event.getPublishedOn().minusHours(1);
+                if (dto.getEventDate().isBefore(minEventDate)) {
+                    throw new ValidationException(
+                            "Дата события не может быть раньше чем за 1 час до даты публикации");
+                }
             }
         }
 
         String title = dto.getTitle();
         if (title != null) {
             if (title.length() < 3 || title.length() > 120) {
-                throw new IllegalArgumentException("Заголовок должен содержать от 3 до 120 символов");
+                throw new ValidationException("Заголовок должен содержать от 3 до 120 символов");
             }
             event.setTitle(title);
         }
@@ -289,7 +273,7 @@ public class EventService {
         String description = dto.getDescription();
         if (description != null) {
             if (description.length() < 20 || description.length() > 7000) {
-                throw new IllegalArgumentException("Описание должно содержать от 20 до 7000 символов");
+                throw new ValidationException("Описание должно содержать от 20 до 7000 символов");
             }
             event.setDescription(description);
         }
@@ -297,7 +281,7 @@ public class EventService {
         String annotation = dto.getAnnotation();
         if (annotation != null) {
             if (annotation.length() < 20 || annotation.length() > 2000) {
-                throw new IllegalArgumentException("Аннотация должна содержать от 20 до 2000 символов");
+                throw new ValidationException("Аннотация должна содержать от 20 до 2000 символов");
             }
             event.setAnnotation(annotation);
         }
@@ -305,16 +289,24 @@ public class EventService {
         Integer participantLimit = dto.getParticipantLimit();
         if (participantLimit != null) {
             if (participantLimit < 0) {
-                throw new IllegalArgumentException("participantLimit не может быть отрицательным");
+                throw new ValidationException("participantLimit не может быть отрицательным");
             }
             event.setParticipantLimit(participantLimit);
         }
 
-        if (dto.getEventDate() != null) event.setEventDate(dto.getEventDate());
-        if (dto.getPinned() != null) event.setPinned(dto.getPinned());
-        if (dto.getPaid() != null) event.setPaid(dto.getPaid());
-        if (dto.getRequestModeration() != null)
+        if (dto.getEventDate() != null) {
+            event.setEventDate(dto.getEventDate());
+        }
+
+        if (dto.getPinned() != null) {
+            event.setPinned(dto.getPinned());
+        }
+        if (dto.getPaid() != null) {
+            event.setPaid(dto.getPaid());
+        }
+        if (dto.getRequestModeration() != null) {
             event.setRequestModeration(dto.getRequestModeration());
+        }
 
         if (dto.getCategoryId() != null) {
             var category = categoryRepository.findById(dto.getCategoryId())
@@ -325,7 +317,6 @@ public class EventService {
         event = eventRepository.save(event);
         return toEventFullDto(event, Collections.emptyMap());
     }
-
 
     @Transactional
     public EventFullDto updateEventState(Long userId, Long eventId, StateActionDto dto) {
@@ -525,11 +516,11 @@ public class EventService {
         String uri = "/events/" + e.getId();
         dto.setViews(hitsMap.getOrDefault(uri, 0L));
 
-        dto.setCategory(toCategoryDto(e.getCategory()));
-        dto.setInitiator(toUserShortDto(e.getInitiator()));
+        dto.setCategory(e.getCategory() != null ? toCategoryDto(e.getCategory()) : null);
+        dto.setInitiator(e.getInitiator() != null ? toUserShortDto(e.getInitiator()) : null);
+
         return dto;
     }
-
     private EventFullDto toEventFullDto(Event e, Map<String, Long> hitsMap) {
         EventFullDto dto = new EventFullDto();
         dto.setId(e.getId());

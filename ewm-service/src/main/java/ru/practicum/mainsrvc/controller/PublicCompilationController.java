@@ -1,6 +1,5 @@
 package ru.practicum.mainsrvc.controller;
 
-import jakarta.validation.constraints.Min;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -23,8 +22,8 @@ public class PublicCompilationController {
     @GetMapping
     public ResponseEntity<List<CompilationDto>> getPublicCompilations(
             @RequestParam(required = false) Boolean pinned,
-            @RequestParam(defaultValue = "0") @Min(0) int from,
-            @RequestParam(defaultValue = "10") @Min(1) int size) {
+            @RequestParam(defaultValue = "0") int from,
+            @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(compilationService.getPublicCompilations(pinned, from, size));
     }
 
