@@ -521,6 +521,7 @@ public class EventService {
 
         return dto;
     }
+
     private EventFullDto toEventFullDto(Event e, Map<String, Long> hitsMap) {
         EventFullDto dto = new EventFullDto();
         dto.setId(e.getId());
