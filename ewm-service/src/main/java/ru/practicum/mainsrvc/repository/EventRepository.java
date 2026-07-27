@@ -19,11 +19,11 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     Optional<Event> findByIdAndState(Long id, EventStatus state);
 
     @Query("SELECT e FROM Event e " +
-            "WHERE (:states IS EMPTY OR e.state IN :states) " +
+            "WHERE (:states IS NULL OR e.state IN :states) " +
             "AND (:rangeStart IS NULL OR e.eventDate >= :rangeStart) " +
             "AND (:rangeEnd IS NULL OR e.eventDate <= :rangeEnd) " +
-            "AND (:users IS EMPTY OR e.initiator.id IN :users) " +
-            "AND (:categories IS EMPTY OR e.category.id IN :categories)")
+            "AND (:users IS NULL OR e.initiator.id IN :users) " +
+            "AND (:categories IS NULL OR e.category.id IN :categories)")
     Page<Event> findByAdminFilters(
             @Param("states") List<String> states,
             @Param("rangeStart") LocalDateTime rangeStart,
