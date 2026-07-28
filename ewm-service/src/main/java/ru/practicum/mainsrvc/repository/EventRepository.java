@@ -33,7 +33,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             Pageable pageable
     );
 
-    @Query("SELECT e FROM Event e WHERE e.state = 'PUBLISHED' " +
+    @Query("SELECT e FROM Event e " +
+            "WHERE e.state = 'PUBLISHED' " +
             "AND (:paid IS NULL OR e.paid = :paid) " +
             "AND (COALESCE(:text, '') = '' OR " +
             "(LOWER(e.annotation) LIKE :textPattern OR LOWER(e.description) LIKE :textPattern)) " +
@@ -45,23 +46,26 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             @Param("textPattern") String textPattern,
             @Param("rangeStart") LocalDateTime rangeStart,
             @Param("rangeEnd") LocalDateTime rangeEnd,
-            Pageable pageable);
+            Pageable pageable
+    );
 
-    @Query("SELECT e FROM Event e WHERE e.state = 'PUBLISHED' " +
-            "AND e.category.id IN (:categories) " +
+    @Query("SELECT e FROM Event e " +
+            "WHERE e.state = 'PUBLISHED' " +
+            "AND (:categories IS NULL OR e.category.id IN :categories) " +
             "AND (:paid IS NULL OR e.paid = :paid) " +
             "AND (COALESCE(:text, '') = '' OR " +
-            "(LOWER(e.annotation) LIKE :textPattern OR LOWER(e.description) LIKE :textPattern)) " +
+            "(LOWER(e.annotation) LIKE CONCAT('%', LOWER(:text), '%') OR " +
+            "LOWER(e.description) LIKE CONCAT('%', LOWER(:text), '%'))) " +
             "AND e.eventDate >= :rangeStart " +
             "AND (:rangeEnd IS NULL OR e.eventDate <= :rangeEnd)")
     Page<Event> findPublishedWithCategories(
             @Param("categories") List<Long> categories,
             @Param("paid") Boolean paid,
             @Param("text") String text,
-            @Param("textPattern") String textPattern,
             @Param("rangeStart") LocalDateTime rangeStart,
             @Param("rangeEnd") LocalDateTime rangeEnd,
-            Pageable pageable);
+            Pageable pageable
+    );
 
     @Query("SELECT e FROM Event e WHERE e.id = :eventId AND e.initiator.id = :initiatorId")
     Optional<Event> findByIdAndInitiator(@Param("eventId") Long eventId, @Param("initiatorId") Long initiatorId);

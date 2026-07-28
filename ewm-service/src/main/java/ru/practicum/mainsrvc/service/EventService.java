@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -74,36 +75,37 @@ public class EventService {
             rangeStart = LocalDateTime.now();
         }
 
-        String textPattern = null;
-        if (text != null && !text.isBlank()) {
-            textPattern = "%" + text.toLowerCase() + "%";
-        }
+        List<Long> normCategories = (categories == null || categories.isEmpty()) ? null : categories;
+
+        String textPattern = (text == null || text.isBlank())
+                ? null
+                : "%" + text.toLowerCase() + "%";
 
         Sort sort = Sort.by("eventDate").ascending();
-        PageRequest pageRequest = PageRequest.of(from, size, sort);
+        Pageable pageable = PageRequest.of(from, size, sort);
 
         Page<Event> pageResult;
-        if (categories == null || categories.isEmpty()) {
+        if (normCategories == null) {
             pageResult = eventRepository.findPublishedWithoutCategories(
-                    paid, text, textPattern, rangeStart, rangeEnd, pageRequest);
+                    paid, text, textPattern, rangeStart, rangeEnd, pageable);
         } else {
             pageResult = eventRepository.findPublishedWithCategories(
-                    categories, paid, text, textPattern, rangeStart, rangeEnd, pageRequest);
+                    normCategories, paid, textPattern, rangeStart, rangeEnd, pageable);
         }
 
         List<Event> events = pageResult.getContent();
 
         Map<String, Long> hitsMap = Collections.emptyMap();
-        try {
-            if (!events.isEmpty()) {
-                List<String> uris = new ArrayList<>(events.size());
-                for (Event e : events) {
-                    uris.add("/events/" + e.getId());
-                }
-                hitsMap = statClient.getHits(uris);
+        if (!events.isEmpty()) {
+            List<String> uris = new ArrayList<>(events.size());
+            for (Event e : events) {
+                uris.add("/events/" + e.getId());
             }
-        } catch (Exception ex) {
-            log.warn("Не удалось получить статистику просмотров, возвращаем 0 для views", ex);
+            try {
+                hitsMap = getHitsMap(uris);
+            } catch (Exception ex) {
+                log.warn("Не удалось получить статистику просмотров, возвращаем 0 для views", ex);
+            }
         }
 
         List<EventShortDto> result = new ArrayList<>(events.size());
@@ -113,6 +115,23 @@ public class EventService {
         }
 
         return result;
+    }
+
+    private Map<String, Long> getHitsMap(List<String> uris) {
+        try {
+            LocalDateTime start = LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC);
+            LocalDateTime end = LocalDateTime.now();
+            List<ViewStatsDto> stats = statClient.getStats(start, end, uris, false);
+            return stats.stream()
+                    .collect(Collectors.toMap(
+                            ViewStatsDto::getUri,
+                            ViewStatsDto::getHits,
+                            (v1, v2) -> v1
+                    ));
+        } catch (Exception e) {
+            log.warn("Ошибка получения статистики: {}", e.getMessage());
+            return Collections.emptyMap();
+        }
     }
 
     @Transactional(readOnly = true)
@@ -185,7 +204,7 @@ public class EventService {
         event.setParticipantLimit(dto.getParticipantLimit() != null ? dto.getParticipantLimit() : 0);
         event.setRequestModeration(dto.getRequestModeration() != null ? dto.getRequestModeration() : true);
 
-        event.setPinned(dto.getPinned() != null ? dto.getPinned() : false); // тоже можно сделать с дефолтом
+        event.setPinned(dto.getPinned() != null ? dto.getPinned() : false);
 
         event.setCategory(category);
         event.setInitiator(initiator);

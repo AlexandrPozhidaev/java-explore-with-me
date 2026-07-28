@@ -41,6 +41,25 @@ public class UserController {
         return ResponseEntity.ok(page);
     }
 
+    @PostMapping("/{userId}/requests")
+    public ResponseEntity<ParticipationRequestDto> createRequest(
+            @PathVariable Long userId,
+            @RequestParam Long eventId,
+            @Valid @RequestBody CreateRequestDto dto) {
+
+        ParticipationRequestDto result = participationRequestService.createRequest(userId, eventId, dto);
+        return ResponseEntity.status(201).body(result);
+    }
+
+    @PatchMapping("/{userId}/requests/{requestId}/cancel")
+    public ResponseEntity<ParticipationRequestDto> cancelRequest(
+            @PathVariable Long userId,
+            @PathVariable Long requestId) {
+
+        ParticipationRequestDto result = participationRequestService.cancelRequest(userId, requestId);
+        return ResponseEntity.ok(result);
+    }
+
     @GetMapping("/{userId}/events/{eventId}/requests")
     public ResponseEntity<Page<ParticipationRequestDto>> getRequestsForUserAndEvent(
             @PathVariable Long userId,
@@ -59,31 +78,11 @@ public class UserController {
         return ResponseEntity.ok(page);
     }
 
-    @PostMapping("/{userId}/requests")
-    public ResponseEntity<ParticipationRequestDto> createRequestWithEventId(
-            @PathVariable Long userId,
-            @RequestParam Long eventId,
-            @Valid @RequestBody CreateRequestDto dto) {
-
-        ParticipationRequestDto result = participationRequestService.createRequest(userId, eventId, dto);
-        return ResponseEntity.status(201).body(result);
-    }
-
-    @PostMapping("/{userId}/events/{eventId}/requests")
-    public ResponseEntity<ParticipationRequestDto> createRequest(
-            @PathVariable Long userId,
-            @PathVariable Long eventId,
-            @RequestBody CreateRequestDto dto) {
-
-        ParticipationRequestDto result = participationRequestService.createRequest(userId, eventId, dto);
-        return ResponseEntity.status(201).body(result);
-    }
-
     @PatchMapping("/{userId}/events/{eventId}/requests")
     public ResponseEntity<ParticipationRequestDto> approveOrRejectRequest(
             @PathVariable Long userId,
             @PathVariable Long eventId,
-            @RequestBody ParticipationRequestStatusDto dto) { // новый DTO с полем status
+            @RequestBody ParticipationRequestStatusDto dto) {
 
         var result = participationRequestService.approveOrReject(dto.getRequestId(), userId, dto.getStatus());
         return ResponseEntity.ok(result);
@@ -119,27 +118,19 @@ public class UserController {
     public ResponseEntity<EventFullDto> updateEventUser(
             @PathVariable Long userId,
             @PathVariable Long eventId,
-            @RequestBody UpdateEventRequestDto dto) {   // без @Valid: валидация длин всё равно в сервисе
+            @RequestBody UpdateEventRequestDto dto) {
 
         var result = eventService.updateEvent(eventId, dto, userId);
         return ResponseEntity.ok(result);
     }
 
-    @PatchMapping("/users/{userId}/events/{eventId}")
-    public EventFullDto updateEventState(
+    @PatchMapping("/{userId}/events/{eventId}/state")
+    public ResponseEntity<EventFullDto> updateEventState(
             @PathVariable Long userId,
             @PathVariable Long eventId,
             @RequestBody StateActionDto stateActionDto) {
 
-        return eventService.updateEventState(userId, eventId, stateActionDto);
-    }
-
-    @PatchMapping("/{userId}/requests/{requestId}/cancel")
-    public ResponseEntity<ParticipationRequestDto> cancelRequest(
-            @PathVariable Long userId,
-            @PathVariable Long requestId) {
-
-        ParticipationRequestDto result = participationRequestService.cancelRequest(userId, requestId);
+        EventFullDto result = eventService.updateEventState(userId, eventId, stateActionDto);
         return ResponseEntity.ok(result);
     }
 }

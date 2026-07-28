@@ -1,6 +1,7 @@
 package ru.practicum.mainsrvc.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -53,7 +54,10 @@ public class Event {
     @ManyToMany(mappedBy = "events", fetch = FetchType.LAZY)
     private List<Compilation> compilations = new ArrayList<>();
 
+    @CreationTimestamp
+    @Column(name = "created_on", updatable = false)
     private LocalDateTime createdOn;
+
     private LocalDateTime publishedOn;
 
     private Double locationLat;
@@ -61,31 +65,15 @@ public class Event {
 
     @PrePersist
     protected void onCreate() {
-        this.createdOn = LocalDateTime.now();
-        this.state = EventStatus.PENDING;
+        if (this.createdOn == null) {
+            this.createdOn = LocalDateTime.now();
+        }
+        if (this.state == null) {
+            this.state = EventStatus.PENDING;
+        }
     }
 
     public Event() {
-    }
-
-    public Event(Long id, String title, String annotation, String description, LocalDateTime eventDate, Category category, User initiator, Boolean paid, Integer participantLimit, Boolean pinned, Boolean requestModeration, EventStatus state, List<Compilation> compilations, LocalDateTime createdOn, LocalDateTime publishedOn, Double locationLat, Double locationLon) {
-        this.id = id;
-        this.title = title;
-        this.annotation = annotation;
-        this.description = description;
-        this.eventDate = eventDate;
-        this.category = category;
-        this.initiator = initiator;
-        this.paid = paid;
-        this.participantLimit = participantLimit;
-        this.pinned = pinned;
-        this.requestModeration = requestModeration;
-        this.state = state;
-        this.compilations = compilations;
-        this.createdOn = createdOn;
-        this.publishedOn = publishedOn;
-        this.locationLat = locationLat;
-        this.locationLon = locationLon;
     }
 
     public Long getId() {

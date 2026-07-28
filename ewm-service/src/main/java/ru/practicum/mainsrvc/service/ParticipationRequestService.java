@@ -27,7 +27,9 @@ public class ParticipationRequestService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
 
-    public ParticipationRequestService(RequestRepository requestRepository, EventRepository eventRepository, UserRepository userRepository) {
+    public ParticipationRequestService(RequestRepository requestRepository,
+                                       EventRepository eventRepository,
+                                       UserRepository userRepository) {
         this.requestRepository = requestRepository;
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
@@ -88,7 +90,7 @@ public class ParticipationRequestService {
 
     public ParticipationRequestDto approveRequestByInitiator(Long requestId, Long initiatorId) {
         ParticipationRequest req = requestRepository.findById(requestId)
-                .orElseThrow(() -> new IllegalArgumentException("Запрос не найден"));
+                .orElseThrow(() -> new NotFoundException("Запрос не найден"));
 
         Event event = req.getEvent();
         Long eventInitiatorId = event.getInitiator() != null ? event.getInitiator().getId() : null;
@@ -103,8 +105,13 @@ public class ParticipationRequestService {
     }
 
     public ParticipationRequestDto approveOrReject(Long requestId, Long initiatorId, RequestStatus status) {
+        // ВАЖНО: проверка на null
+        if (requestId == null) {
+            throw new IllegalArgumentException("requestId не может быть null");
+        }
+
         ParticipationRequest req = requestRepository.findById(requestId)
-                .orElseThrow(() -> new IllegalArgumentException("Запрос не найден"));
+                .orElseThrow(() -> new NotFoundException("Запрос не найден"));
 
         Event event = req.getEvent();
         Long eventInitiatorId = event.getInitiator() != null ? event.getInitiator().getId() : null;
@@ -135,6 +142,12 @@ public class ParticipationRequestService {
         return toDto(req);
     }
 
+    public Page<ParticipationRequestDto> getRequestsByUserAndEvent(Long userId, Long eventId, int from, int size) {
+        Pageable pageable = PageRequest.of(from, size);
+        Page<ParticipationRequest> requests = requestRepository.findAllByRequesterIdAndEventId(userId, eventId, pageable);
+        return requests.map(this::toDto);
+    }
+
     private ParticipationRequestDto toDto(ParticipationRequest r) {
         ParticipationRequestDto dto = new ParticipationRequestDto();
         dto.setId(r.getId());
@@ -144,11 +157,5 @@ public class ParticipationRequestService {
         dto.setComment(r.getComment());
         dto.setStatus(r.getStatus());
         return dto;
-    }
-
-    public Page<ParticipationRequestDto> getRequestsByUserAndEvent(Long userId, Long eventId, int from, int size) {
-        Pageable pageable = PageRequest.of(from, size);
-        Page<ParticipationRequest> requests = requestRepository.findAllByRequesterIdAndEventId(userId, eventId, pageable);
-        return requests.map(this::toDto);
     }
 }

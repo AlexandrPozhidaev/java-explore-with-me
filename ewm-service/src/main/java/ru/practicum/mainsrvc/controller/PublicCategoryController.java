@@ -1,5 +1,6 @@
 package ru.practicum.mainsrvc.controller;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
@@ -28,8 +29,8 @@ public class PublicCategoryController {
             throw new IllegalArgumentException("Некорректные параметры пагинации: from >= 0, 0 < size <= 1000");
         }
 
-        var pageRequest = PageRequest.of(from, size, Sort.unsorted());
-        var page = categoryService.getCategoriesPage(pageRequest);
+        PageRequest pageRequest = PageRequest.of(from, size, Sort.unsorted());
+        Page<ru.practicum.mainsrvc.entity.Category> page = categoryService.getCategoriesPage(pageRequest);
 
         List<CategoryDto> dtoList = page.getContent().stream()
                 .map(this::toCategoryDto)

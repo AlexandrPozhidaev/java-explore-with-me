@@ -1,6 +1,8 @@
 package ru.practicum.mainsrvc.service;
 
 import jakarta.validation.ValidationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +27,8 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class CompilationService {
+
+    private static final Logger log = LoggerFactory.getLogger(CompilationService.class);
 
     private final CompilationRepository compilationRepository;
     private final EventRepository eventRepository;
@@ -70,7 +74,6 @@ public class CompilationService {
                 .collect(Collectors.toList());
     }
 
-
     @Transactional(readOnly = true)
     public CompilationDto getCompilationById(Long id) {
         Compilation c = compilationRepository.findById(id)
@@ -112,7 +115,6 @@ public class CompilationService {
                 eventIds
         );
     }
-
 
     @Transactional
     public CompilationDto updateCompilation(Long compId, UpdateCompilationDto dto) {
@@ -181,23 +183,27 @@ public class CompilationService {
             }
         }
 
-        List<String> uris = eventMap.keySet().stream()
-                .map(id -> "/events/" + id)
-                .collect(Collectors.toList());
+        Map<String, Long> hitsMap = new HashMap<>();
 
-        List<ViewStatsDto> stats = Collections.emptyList();
-        if (!uris.isEmpty()) {
-            LocalDateTime start = LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC);
-            LocalDateTime end = LocalDateTime.now();
-            stats = statClient.getStats(start, end, uris, false);
+        if (!eventMap.isEmpty()) {
+            List<String> uris = eventMap.keySet().stream()
+                    .map(id -> "/events/" + id)
+                    .collect(Collectors.toList());
+
+            try {
+                LocalDateTime start = LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC);
+                LocalDateTime end = LocalDateTime.now();
+                List<ViewStatsDto> stats = statClient.getStats(start, end, uris, false);
+                hitsMap = stats.stream()
+                        .collect(Collectors.toMap(
+                                ViewStatsDto::getUri,
+                                ViewStatsDto::getHits,
+                                (v1, v2) -> v1
+                        ));
+            } catch (Exception e) {
+                log.warn("Не удалось получить статистику просмотров, возвращаем пустую карту", e);
+            }
         }
-
-        Map<String, Long> hitsMap = stats.stream()
-                .collect(Collectors.toMap(
-                        ViewStatsDto::getUri,
-                        ViewStatsDto::getHits,
-                        (v1, v2) -> v1
-                ));
 
         return new StatsData(eventMap, hitsMap);
     }
@@ -218,23 +224,27 @@ public class CompilationService {
             }
         }
 
-        List<String> uris = eventMap.keySet().stream()
-                .map(id -> "/events/" + id)
-                .collect(Collectors.toList());
+        Map<String, Long> hitsMap = new HashMap<>();
 
-        List<ViewStatsDto> stats = Collections.emptyList();
-        if (!uris.isEmpty()) {
-            LocalDateTime start = LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC);
-            LocalDateTime end = LocalDateTime.now();
-            stats = statClient.getStats(start, end, uris, false);
+        if (!eventMap.isEmpty()) {
+            List<String> uris = eventMap.keySet().stream()
+                    .map(id -> "/events/" + id)
+                    .collect(Collectors.toList());
+
+            try {
+                LocalDateTime start = LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC);
+                LocalDateTime end = LocalDateTime.now();
+                List<ViewStatsDto> stats = statClient.getStats(start, end, uris, false);
+                hitsMap = stats.stream()
+                        .collect(Collectors.toMap(
+                                ViewStatsDto::getUri,
+                                ViewStatsDto::getHits,
+                                (v1, v2) -> v1
+                        ));
+            } catch (Exception e) {
+                log.warn("Не удалось получить статистику просмотров, возвращаем пустую карту", e);
+            }
         }
-
-        Map<String, Long> hitsMap = stats.stream()
-                .collect(Collectors.toMap(
-                        ViewStatsDto::getUri,
-                        ViewStatsDto::getHits,
-                        (v1, v2) -> v1
-                ));
 
         return new StatsData(eventMap, hitsMap);
     }

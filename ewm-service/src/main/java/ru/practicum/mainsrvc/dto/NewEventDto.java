@@ -19,7 +19,7 @@ public class NewEventDto {
     private String description;
 
     @NotNull(message = "Дата события обязательна")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "UTC")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
 
     @NotNull(message = "Лимит участников обязателен")
@@ -35,7 +35,7 @@ public class NewEventDto {
     private Boolean requestModeration;
 
     @NotNull(message = "Категория обязательна")
-    private Long category; // совпадает с JSON: "category": 4
+    private Long category;
 
     @NotNull(message = "Координаты обязательны")
     private LocationDto location;
