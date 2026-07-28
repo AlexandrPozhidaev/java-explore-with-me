@@ -70,7 +70,7 @@ public class ParticipationRequestService {
 
         if (participantLimit != null && participantLimit == 0) {
             request.setStatus(RequestStatus.CONFIRMED);
-        } else if (!event.getRequestModeration()) {
+        } else if (!event.isRequestModeration()) {
             request.setStatus(RequestStatus.CONFIRMED);
         } else {
             request.setStatus(RequestStatus.PENDING);

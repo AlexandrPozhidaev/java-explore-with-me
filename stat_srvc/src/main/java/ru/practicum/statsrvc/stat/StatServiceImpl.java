@@ -19,8 +19,7 @@ public class StatServiceImpl implements StatService {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final Pattern IP_PATTERN = Pattern.compile(
-            "^((25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)\\.){3}"
-                    + "(25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)$"
+            "^((25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)\\.){3}(25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)$|^localhost$|^unknown-ip$|^127\\.0\\.0\\.1$"
     );
 
     public StatServiceImpl(StatRepository repository) {
@@ -36,8 +35,10 @@ public class StatServiceImpl implements StatService {
             throw new IllegalArgumentException("timestamp не может быть пустым");
         }
 
-        if (dto.getIp() == null || !IP_PATTERN.matcher(dto.getIp()).matches()) {
-            throw new IllegalArgumentException("ip имеет неверный формат: " + dto.getIp());
+        String ip = dto.getIp();
+        if (ip == null || !IP_PATTERN.matcher(ip).matches()) {
+            log.warn("IP имеет неверный формат: {}, используем 'unknown'", ip);
+            ip = "unknown";
         }
 
         if (dto.getApp() == null || dto.getApp().length() > 255) {
@@ -50,12 +51,13 @@ public class StatServiceImpl implements StatService {
         Stat entity = new Stat();
         entity.setApp(dto.getApp());
         entity.setUri(dto.getUri());
-        entity.setIp(dto.getIp());
-        entity.setTimestamp(dto.getTimestamp()); // уже LocalDateTime
+        entity.setIp(ip);
+        entity.setTimestamp(dto.getTimestamp());
 
         try {
             repository.save(entity);
-            log.debug("Успешно: app={}, uri={}", entity.getApp(), entity.getUri());
+            log.debug("Успешно сохранен хит: app={}, uri={}, ip={}",
+                    entity.getApp(), entity.getUri(), entity.getIp());
         } catch (Exception e) {
             log.error("Ошибка сохранения: app={}, uri={}", dto.getApp(), dto.getUri(), e);
             throw e;

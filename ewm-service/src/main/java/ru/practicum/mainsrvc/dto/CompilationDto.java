@@ -3,23 +3,12 @@ package ru.practicum.mainsrvc.dto;
 import java.util.List;
 
 public class CompilationDto {
+
     private Long id;
-    private Boolean pinned;
+    private boolean pinned;
     private String title;
     private String description;
-    private List<EventShortDto> events;  // Изменено с List<Long> на List<EventShortDto>
-
-    public CompilationDto() {
-    }
-
-    public CompilationDto(Long id, Boolean pinned, String title,
-                          String description, List<EventShortDto> events) {
-        this.id = id;
-        this.pinned = pinned;
-        this.title = title;
-        this.description = description;
-        this.events = events;
-    }
+    private List<EventShortDto> events;
 
     public Long getId() {
         return id;
@@ -29,11 +18,11 @@ public class CompilationDto {
         this.id = id;
     }
 
-    public Boolean getPinned() {
+    public boolean isPinned() {
         return pinned;
     }
 
-    public void setPinned(Boolean pinned) {
+    public void setPinned(boolean pinned) {
         this.pinned = pinned;
     }
 

@@ -6,25 +6,16 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 
 public class NewCompilationDto {
-    @NotBlank
-    @Size(max = 50, message = "Длина title не должна превышать 50 символов")
+
+    @NotBlank(message = "Заголовок не может быть пустым")
+    @Size(min = 3, max = 50, message = "Заголовок должен содержать от 3 до 50 символов")
     private String title;
 
     private String description;
 
-    private boolean pinned;
+    private boolean pinned = false;
 
     private List<Long> events;
-
-    public NewCompilationDto(String title, String description, boolean pinned, List<Long> events) {
-        this.title = title;
-        this.description = description;
-        this.pinned = pinned;
-        this.events = events;
-    }
-
-    public NewCompilationDto() {
-    }
 
     public String getTitle() {
         return title;

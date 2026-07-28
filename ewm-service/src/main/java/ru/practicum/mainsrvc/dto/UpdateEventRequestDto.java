@@ -1,11 +1,12 @@
 package ru.practicum.mainsrvc.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.validation.constraints.PositiveOrZero;
+import ru.practicum.mainsrvc.entity.EventAction;
 
 import java.time.LocalDateTime;
 
 public class UpdateEventRequestDto {
+
     private String title;
     private String annotation;
     private String description;
@@ -13,28 +14,14 @@ public class UpdateEventRequestDto {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
 
-    @PositiveOrZero
-    private Integer participantLimit;
-
-    private Boolean pinned;
-    private Boolean paid;
-    private Boolean isRequestModeration;
     private Long categoryId;
-
-    public UpdateEventRequestDto(String title, String annotation, String description, LocalDateTime eventDate, Integer participantLimit, Boolean pinned, Boolean paid, Boolean isRequestModeration, Long categoryId) {
-        this.title = title;
-        this.annotation = annotation;
-        this.description = description;
-        this.eventDate = eventDate;
-        this.participantLimit = participantLimit;
-        this.pinned = pinned;
-        this.paid = paid;
-        this.isRequestModeration = isRequestModeration;
-        this.categoryId = categoryId;
-    }
-
-    public UpdateEventRequestDto() {
-    }
+    private Boolean paid;
+    private Integer participantLimit;
+    private Boolean pinned;
+    private Boolean requestModeration;
+    private Double locationLat;
+    private Double locationLon;
+    private EventAction stateAction;
 
     public String getTitle() {
         return title;
@@ -68,6 +55,22 @@ public class UpdateEventRequestDto {
         this.eventDate = eventDate;
     }
 
+    public Long getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(Long categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public Boolean getPaid() {
+        return paid;
+    }
+
+    public void setPaid(Boolean paid) {
+        this.paid = paid;
+    }
+
     public Integer getParticipantLimit() {
         return participantLimit;
     }
@@ -84,27 +87,35 @@ public class UpdateEventRequestDto {
         this.pinned = pinned;
     }
 
-    public Boolean getPaid() {
-        return paid;
-    }
-
-    public void setPaid(Boolean paid) {
-        this.paid = paid;
-    }
-
     public Boolean getRequestModeration() {
-        return isRequestModeration;
+        return requestModeration;
     }
 
     public void setRequestModeration(Boolean requestModeration) {
-        isRequestModeration = requestModeration;
+        this.requestModeration = requestModeration;
     }
 
-    public Long getCategoryId() {
-        return categoryId;
+    public Double getLocationLat() {
+        return locationLat;
     }
 
-    public void setCategoryId(Long categoryId) {
-        this.categoryId = categoryId;
+    public void setLocationLat(Double locationLat) {
+        this.locationLat = locationLat;
+    }
+
+    public Double getLocationLon() {
+        return locationLon;
+    }
+
+    public void setLocationLon(Double locationLon) {
+        this.locationLon = locationLon;
+    }
+
+    public EventAction getStateAction() {
+        return stateAction;
+    }
+
+    public void setStateAction(EventAction stateAction) {
+        this.stateAction = stateAction;
     }
 }

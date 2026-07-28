@@ -28,48 +28,61 @@ public class StatClient {
         this.serverUrl = serverUrl.endsWith("/") ? serverUrl : serverUrl + "/";
     }
 
-
-    public StatDto hit(String uri, String app, String ip) {
-        StatDto request = new StatDto(app, uri, ip, LocalDateTime.now());
-        return restTemplate.postForObject(serverUrl + "hit", request, StatDto.class);
+    public void hit(String uri, String app, String ip) {
+        try {
+            StatDto request = new StatDto(app, uri, ip, LocalDateTime.now());
+            restTemplate.postForObject(serverUrl + "hit", request, Void.class);
+        } catch (Exception e) {
+            System.err.println("Failed to send hit to stats service: " + e.getMessage());
+        }
     }
 
     public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, boolean unique) {
-        String startStr = start.format(FORMATTER);
-        String endStr = end.format(FORMATTER);
+        try {
+            String startStr = start.format(FORMATTER);
+            String endStr = end.format(FORMATTER);
 
-        UriComponentsBuilder builder = UriComponentsBuilder
-                .fromHttpUrl(serverUrl + "/stats")
-                .queryParam("start", startStr)
-                .queryParam("end", endStr)
-                .queryParam("unique", unique);
+            UriComponentsBuilder builder = UriComponentsBuilder
+                    .fromHttpUrl(serverUrl + "stats")
+                    .queryParam("start", startStr)
+                    .queryParam("end", endStr)
+                    .queryParam("unique", unique);
 
-        if (uris != null && !uris.isEmpty()) {
-            for (String u : uris) {
-                builder.queryParam("uris", u);
+            if (uris != null && !uris.isEmpty()) {
+                for (String u : uris) {
+                    builder.queryParam("uris", u);
+                }
             }
-        }
 
-        ResponseEntity<List<ViewStatsDto>> response = restTemplate.exchange(
-                builder.toUriString(),
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<List<ViewStatsDto>>() {}
-        );
-        return response.getBody();
+            ResponseEntity<List<ViewStatsDto>> response = restTemplate.exchange(
+                    builder.toUriString(),
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<List<ViewStatsDto>>() {}
+            );
+            return response.getBody();
+        } catch (Exception e) {
+            System.err.println("Failed to get stats from stats service: " + e.getMessage());
+            return List.of();
+        }
     }
 
     public Map<String, Long> getHits(List<String> uris) {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime start = now.minusYears(10);
-        LocalDateTime end = now.plusYears(10);
+        try {
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime start = now.minusYears(10);
+            LocalDateTime end = now.plusYears(10);
 
-        List<ViewStatsDto> stats = getStats(start, end, uris, false);
+            List<ViewStatsDto> stats = getStats(start, end, uris, false);
 
-        Map<String, Long> result = new HashMap<>();
-        for (ViewStatsDto s : stats) {
-            result.put(s.getUri(), s.getHits());
+            Map<String, Long> result = new HashMap<>();
+            for (ViewStatsDto s : stats) {
+                result.put(s.getUri(), s.getHits());
+            }
+            return result;
+        } catch (Exception e) {
+            System.err.println("Failed to get hits from stats service: " + e.getMessage());
+            return new HashMap<>();
         }
-        return result;
     }
 }

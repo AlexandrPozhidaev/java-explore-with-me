@@ -47,22 +47,26 @@ public class CompilationService {
 
     @Transactional
     public CompilationDto createCompilation(NewCompilationDto dto) {
-        if (compilationRepository.existsByTitle(dto.getTitle())) {
-            throw new ConflictException("Подборка '" + dto.getTitle() + "' уже существует");
-        }
+        log.debug("Creating compilation with title: {}", dto.getTitle());
 
         if (dto.getTitle() == null || dto.getTitle().isBlank()) {
             throw new ValidationException("Заголовок подборки не может быть пустым");
         }
-        if (dto.getTitle().length() < 3 || dto.getTitle().length() > 50) {
+        String title = dto.getTitle().trim();
+        if (title.length() < 3 || title.length() > 50) {
             throw new ValidationException("Заголовок должен содержать от 3 до 50 символов");
         }
 
-        Compilation c = new Compilation();
-        c.setTitle(dto.getTitle().trim());
-        c.setDescription(dto.getDescription() != null ? dto.getDescription().trim() : null);
-        c.setPinned(dto.isPinned());
+        if (compilationRepository.existsByTitle(title)) {
+            throw new ConflictException("Подборка '" + title + "' уже существует");
+        }
 
+        Compilation compilation = new Compilation();
+        compilation.setTitle(title);
+        compilation.setDescription(dto.getDescription() != null ? dto.getDescription().trim() : null);
+        compilation.setPinned(dto.isPinned());
+
+        // Загрузка событий
         List<Event> events = new ArrayList<>();
         if (dto.getEvents() != null && !dto.getEvents().isEmpty()) {
             events = eventRepository.findAllById(dto.getEvents());
@@ -73,34 +77,23 @@ public class CompilationService {
                         .collect(Collectors.toList());
                 throw new NotFoundException("События не найдены: " + notFound);
             }
-            c.getEvents().addAll(events);
+            compilation.setEvents(events);
         }
 
-        c = compilationRepository.save(c);
+        compilation = compilationRepository.save(compilation);
+        log.info("Created compilation: id={}, title={}, eventsCount={}",
+                compilation.getId(), compilation.getTitle(), compilation.getEvents().size());
 
-        Map<String, Long> hitsMap = Collections.emptyMap();
-        if (!events.isEmpty()) {
-            List<String> uris = events.stream()
-                    .map(e -> "/events/" + e.getId())
-                    .collect(Collectors.toList());
-            try {
-                hitsMap = getStatsForUris(uris);
-            } catch (Exception ex) {
-                log.warn("Не удалось получить статистику просмотров", ex);
-            }
-        }
+        Map<String, Long> hitsMap = getStatsForCompilation(compilation);
 
-        return toCompilationDto(c, hitsMap);
+        return toCompilationDto(compilation, hitsMap);
     }
 
     @Transactional(readOnly = true)
     public List<CompilationDto> getPublicCompilations(Boolean pinned, int from, int size) {
-        if (from < 0) {
-            throw new IllegalArgumentException("Параметр 'from' не может быть отрицательным");
-        }
-        if (size <= 0 || size > 1000) {
-            throw new IllegalArgumentException("Параметр 'size' должен быть больше 0 и не более 1000");
-        }
+        log.debug("Getting public compilations: pinned={}, from={}, size={}", pinned, from, size);
+
+        validatePagination(from, size);
 
         Sort sort = pinned != null
                 ? Sort.by("pinned").descending().and(Sort.by("id").ascending())
@@ -108,102 +101,174 @@ public class CompilationService {
 
         Pageable pageable = PageRequest.of(from / size, size, sort);
         Page<Compilation> compsPage = compilationRepository.findAllOrByPinned(pinned, pageable);
-        List<Compilation> comps = compsPage.getContent();
+        List<Compilation> compilations = compsPage.getContent();
 
-        Map<Long, Map<String, Long>> statsMap = collectStatsForCompilations(comps);
+        Map<Long, Map<String, Long>> statsMap = collectStatsForCompilations(compilations);
 
-        return comps.stream()
-                .map(c -> toCompilationDto(c, statsMap.getOrDefault(c.getId(), Collections.emptyMap())))
-                .collect(Collectors.toList());
+        List<CompilationDto> result = new ArrayList<>();
+        for (Compilation c : compilations) {
+            Map<String, Long> hitsMap = statsMap.getOrDefault(c.getId(), Collections.emptyMap());
+            result.add(toCompilationDto(c, hitsMap));
+        }
+
+        return result;
     }
 
     @Transactional(readOnly = true)
     public CompilationDto getCompilationById(Long id) {
-        Compilation c = compilationRepository.findById(id)
+        log.debug("Getting compilation by id: {}", id);
+
+        Compilation compilation = compilationRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Подборка не найдена: " + id));
 
-        Map<String, Long> hitsMap = collectStatsForCompilation(c);
-        return toCompilationDto(c, hitsMap);
+        Map<String, Long> hitsMap = getStatsForCompilation(compilation);
+
+        return toCompilationDto(compilation, hitsMap);
     }
 
     @Transactional
     public CompilationDto updateCompilation(Long compId, UpdateCompilationDto dto) {
-        Compilation c = compilationRepository.findById(compId)
+        log.debug("Updating compilation: id={}", compId);
+
+        Compilation compilation = compilationRepository.findById(compId)
                 .orElseThrow(() -> new NotFoundException("Подборка не найдена: " + compId));
 
-        if (dto.getTitle() != null && !dto.getTitle().equals(c.getTitle())) {
+        if (dto.getTitle() != null) {
             String newTitle = dto.getTitle().trim();
             if (newTitle.length() < 3 || newTitle.length() > 50) {
                 throw new ValidationException("Заголовок должен содержать от 3 до 50 символов");
             }
-            if (compilationRepository.existsByTitle(newTitle)) {
+            if (!newTitle.equals(compilation.getTitle()) && compilationRepository.existsByTitle(newTitle)) {
                 throw new ConflictException("Подборка с таким заголовком уже существует");
             }
-            c.setTitle(newTitle);
+            compilation.setTitle(newTitle);
         }
 
         if (dto.getDescription() != null) {
-            c.setDescription(dto.getDescription().trim());
+            compilation.setDescription(dto.getDescription().trim());
         }
 
         if (dto.getPinned() != null) {
-            c.setPinned(dto.getPinned());
+            compilation.setPinned(dto.getPinned());
         }
 
-        c = compilationRepository.save(c);
+        if (dto.getEvents() != null) {
+            List<Event> events;
+            if (dto.getEvents().isEmpty()) {
+                events = Collections.emptyList();
+            } else {
+                events = eventRepository.findAllById(dto.getEvents());
+                if (events.size() != dto.getEvents().size()) {
+                    Set<Long> foundIds = events.stream().map(Event::getId).collect(Collectors.toSet());
+                    List<Long> notFound = dto.getEvents().stream()
+                            .filter(id -> !foundIds.contains(id))
+                            .collect(Collectors.toList());
+                    throw new NotFoundException("События не найдены: " + notFound);
+                }
+            }
+            compilation.setEvents(events);
+        }
 
-        Map<String, Long> hitsMap = collectStatsForCompilation(c);
-        return toCompilationDto(c, hitsMap);
+        compilation = compilationRepository.save(compilation);
+        log.info("Updated compilation: id={}, title={}, eventsCount={}",
+                compilation.getId(), compilation.getTitle(), compilation.getEvents().size());
+
+        Map<String, Long> hitsMap = getStatsForCompilation(compilation);
+
+        return toCompilationDto(compilation, hitsMap);
     }
 
     @Transactional
     public void deleteCompilation(Long compId) {
+        log.debug("Deleting compilation: id={}", compId);
+
         if (!compilationRepository.existsById(compId)) {
             throw new NotFoundException("Подборка не найдена: " + compId);
         }
+
         compilationRepository.deleteById(compId);
+        log.info("Deleted compilation: id={}", compId);
+    }
+
+    private void validatePagination(int from, int size) {
+        if (from < 0) {
+            throw new IllegalArgumentException("Параметр 'from' не может быть отрицательным");
+        }
+        if (size <= 0 || size > 1000) {
+            throw new IllegalArgumentException("Параметр 'size' должен быть больше 0 и не более 1000");
+        }
     }
 
     private Map<String, Long> getStatsForUris(List<String> uris) {
+        if (uris == null || uris.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
         try {
             LocalDateTime start = LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC);
             LocalDateTime end = LocalDateTime.now();
             List<ViewStatsDto> stats = statClient.getStats(start, end, uris, false);
-            return stats.stream()
-                    .collect(Collectors.toMap(
-                            ViewStatsDto::getUri,
-                            ViewStatsDto::getHits,
-                            (v1, v2) -> v1
-                    ));
+
+            Map<String, Long> result = new HashMap<>();
+            for (ViewStatsDto stat : stats) {
+                result.put(stat.getUri(), stat.getHits());
+            }
+            return result;
         } catch (Exception e) {
             log.warn("Ошибка получения статистики: {}", e.getMessage());
             return Collections.emptyMap();
         }
     }
 
-    private Map<Long, Map<String, Long>> collectStatsForCompilations(List<Compilation> comps) {
-        Map<Long, Map<String, Long>> result = new HashMap<>();
+    private Map<Long, Map<String, Long>> collectStatsForCompilations(List<Compilation> compilations) {
+        List<String> allUris = new ArrayList<>();
+        for (Compilation c : compilations) {
+            if (c.getEvents() != null) {
+                for (Event e : c.getEvents()) {
+                    if (e != null) {
+                        allUris.add("/events/" + e.getId());
+                    }
+                }
+            }
+        }
 
-        for (Compilation c : comps) {
-            Map<String, Long> hitsMap = collectStatsForCompilation(c);
-            result.put(c.getId(), hitsMap);
+        if (allUris.isEmpty()) {
+            Map<Long, Map<String, Long>> emptyResult = new HashMap<>();
+            for (Compilation c : compilations) {
+                emptyResult.put(c.getId(), Collections.emptyMap());
+            }
+            return emptyResult;
+        }
+
+        Map<String, Long> allStats = getStatsForUris(allUris);
+
+        Map<Long, Map<String, Long>> result = new HashMap<>();
+        for (Compilation c : compilations) {
+            Map<String, Long> compilationStats = new HashMap<>();
+            if (c.getEvents() != null) {
+                for (Event e : c.getEvents()) {
+                    if (e != null) {
+                        String uri = "/events/" + e.getId();
+                        compilationStats.put(uri, allStats.getOrDefault(uri, 0L));
+                    }
+                }
+            }
+            result.put(c.getId(), compilationStats);
         }
 
         return result;
     }
 
-    private Map<String, Long> collectStatsForCompilation(Compilation c) {
-        if (c.getEvents() == null || c.getEvents().isEmpty()) {
+    private Map<String, Long> getStatsForCompilation(Compilation compilation) {
+        if (compilation.getEvents() == null || compilation.getEvents().isEmpty()) {
             return Collections.emptyMap();
         }
 
-        List<String> uris = c.getEvents().stream()
-                .filter(Objects::nonNull)
-                .map(e -> "/events/" + e.getId())
-                .collect(Collectors.toList());
-
-        if (uris.isEmpty()) {
-            return Collections.emptyMap();
+        List<String> uris = new ArrayList<>();
+        for (Event e : compilation.getEvents()) {
+            if (e != null) {
+                uris.add("/events/" + e.getId());
+            }
         }
 
         return getStatsForUris(uris);
@@ -213,13 +278,12 @@ public class CompilationService {
         EventShortDto dto = new EventShortDto();
         dto.setId(e.getId());
         dto.setTitle(e.getTitle());
-        dto.setPinned(e.getPinned());
-        dto.setPaid(e.getPaid());
+        dto.setPinned(e.isPinned());
+        dto.setPaid(e.isPaid());
         dto.setEventDate(e.getEventDate());
 
         String uri = "/events/" + e.getId();
-        Long views = hitsMap != null ? hitsMap.getOrDefault(uri, 0L) : 0L;
-        dto.setViews(views);
+        dto.setViews(hitsMap != null ? hitsMap.getOrDefault(uri, 0L) : 0L);
 
         return dto;
     }
@@ -232,9 +296,11 @@ public class CompilationService {
         dto.setDescription(c.getDescription());
 
         List<EventShortDto> eventDtos = new ArrayList<>();
-        for (Event e : c.getEvents()) {
-            if (e != null) {
-                eventDtos.add(toEventShortDto(e, hitsMap));
+        if (c.getEvents() != null) {
+            for (Event e : c.getEvents()) {
+                if (e != null) {
+                    eventDtos.add(toEventShortDto(e, hitsMap));
+                }
             }
         }
         dto.setEvents(eventDtos);

@@ -1,18 +1,19 @@
 package ru.practicum.mainsrvc.dto;
 
+import jakarta.validation.constraints.Size;
+
+import java.util.List;
+
 public class UpdateCompilationDto {
+
+    @Size(min = 3, max = 50, message = "Заголовок должен содержать от 3 до 50 символов")
     private String title;
+
     private String description;
+
     private Boolean pinned;
 
-    public UpdateCompilationDto(String title, String description, Boolean pinned) {
-        this.title = title;
-        this.description = description;
-        this.pinned = pinned;
-    }
-
-    public UpdateCompilationDto() {
-    }
+    private List<Long> events;
 
     public String getTitle() {
         return title;
@@ -36,5 +37,13 @@ public class UpdateCompilationDto {
 
     public void setPinned(Boolean pinned) {
         this.pinned = pinned;
+    }
+
+    public List<Long> getEvents() {
+        return events;
+    }
+
+    public void setEvents(List<Long> events) {
+        this.events = events;
     }
 }

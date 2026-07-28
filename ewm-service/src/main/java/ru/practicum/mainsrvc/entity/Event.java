@@ -35,21 +35,21 @@ public class Event {
     @JoinColumn(name = "initiator_id", nullable = false)
     private User initiator;
 
-    @Column(name = "paid", columnDefinition = "BOOLEAN DEFAULT FALSE")
-    private Boolean paid;
+    @Column(name = "paid", nullable = false)
+    private boolean paid = false;
 
     @Column(name = "participant_limit")
-    private Integer participantLimit;
+    private Integer participantLimit = 0;
 
-    @Column(name = "pinned", columnDefinition = "BOOLEAN DEFAULT FALSE")
-    private Boolean pinned;
+    @Column(name = "pinned", nullable = false)
+    private boolean pinned = false;
 
-    @Column(name = "is_request_moderation", columnDefinition = "BOOLEAN DEFAULT FALSE")
-    private Boolean requestModeration;
+    @Column(name = "is_request_moderation", nullable = false)
+    private boolean requestModeration = true;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "state", nullable = false)
-    private EventStatus state;
+    private EventStatus state = EventStatus.PENDING;
 
     @ManyToMany(mappedBy = "events", fetch = FetchType.LAZY)
     private List<Compilation> compilations = new ArrayList<>();
@@ -61,18 +61,11 @@ public class Event {
     @Column(name = "published_on")
     private LocalDateTime publishedOn;
 
+    @Column(name = "location_lat")
     private Double locationLat;
-    private Double locationLon;
 
-    @PrePersist
-    protected void onCreate() {
-        if (this.createdOn == null) {
-            this.createdOn = LocalDateTime.now();
-        }
-        if (this.state == null) {
-            this.state = EventStatus.PENDING;
-        }
-    }
+    @Column(name = "location_lon")
+    private Double locationLon;
 
     public Event() {
     }
@@ -81,132 +74,132 @@ public class Event {
         return id;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
     public String getTitle() {
         return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
     }
 
     public String getAnnotation() {
         return annotation;
     }
 
-    public void setAnnotation(String annotation) {
-        this.annotation = annotation;
-    }
-
     public String getDescription() {
         return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 
     public LocalDateTime getEventDate() {
         return eventDate;
     }
 
-    public void setEventDate(LocalDateTime eventDate) {
-        this.eventDate = eventDate;
-    }
-
     public Category getCategory() {
         return category;
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
     }
 
     public User getInitiator() {
         return initiator;
     }
 
-    public void setInitiator(User initiator) {
-        this.initiator = initiator;
-    }
-
-    public Boolean getPaid() {
+    public boolean isPaid() {
         return paid;
-    }
-
-    public void setPaid(Boolean paid) {
-        this.paid = paid;
     }
 
     public Integer getParticipantLimit() {
         return participantLimit;
     }
 
-    public void setParticipantLimit(Integer participantLimit) {
-        this.participantLimit = participantLimit;
-    }
-
-    public Boolean getPinned() {
+    public boolean isPinned() {
         return pinned;
     }
 
-    public void setPinned(Boolean pinned) {
-        this.pinned = pinned;
-    }
-
-    public Boolean getRequestModeration() {
+    public boolean isRequestModeration() {
         return requestModeration;
-    }
-
-    public void setRequestModeration(Boolean requestModeration) {
-        this.requestModeration = requestModeration;
     }
 
     public EventStatus getState() {
         return state;
     }
 
-    public void setState(EventStatus state) {
-        this.state = state;
-    }
-
     public List<Compilation> getCompilations() {
         return compilations;
-    }
-
-    public void setCompilations(List<Compilation> compilations) {
-        this.compilations = compilations;
     }
 
     public LocalDateTime getCreatedOn() {
         return createdOn;
     }
 
-    public void setCreatedOn(LocalDateTime createdOn) {
-        this.createdOn = createdOn;
-    }
-
     public LocalDateTime getPublishedOn() {
         return publishedOn;
-    }
-
-    public void setPublishedOn(LocalDateTime publishedOn) {
-        this.publishedOn = publishedOn;
     }
 
     public Double getLocationLat() {
         return locationLat;
     }
 
-    public void setLocationLat(Double locationLat) {
-        this.locationLat = locationLat;
-    }
-
     public Double getLocationLon() {
         return locationLon;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setAnnotation(String annotation) {
+        this.annotation = annotation;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setEventDate(LocalDateTime eventDate) {
+        this.eventDate = eventDate;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    public void setInitiator(User initiator) {
+        this.initiator = initiator;
+    }
+
+    public void setPaid(boolean paid) {
+        this.paid = paid;
+    }
+
+    public void setParticipantLimit(Integer participantLimit) {
+        this.participantLimit = participantLimit;
+    }
+
+    public void setPinned(boolean pinned) {
+        this.pinned = pinned;
+    }
+
+    public void setRequestModeration(boolean requestModeration) {
+        this.requestModeration = requestModeration;
+    }
+
+    public void setState(EventStatus state) {
+        this.state = state;
+    }
+
+    public void setCompilations(List<Compilation> compilations) {
+        this.compilations = compilations;
+    }
+
+    public void setCreatedOn(LocalDateTime createdOn) {
+        this.createdOn = createdOn;
+    }
+
+    public void setPublishedOn(LocalDateTime publishedOn) {
+        this.publishedOn = publishedOn;
+    }
+
+    public void setLocationLat(Double locationLat) {
+        this.locationLat = locationLat;
     }
 
     public void setLocationLon(Double locationLon) {
