@@ -27,6 +27,8 @@ public class User {
     @Column(name = "active", columnDefinition = "BOOLEAN DEFAULT TRUE")
     private Boolean active = true;
 
+
+
     public User() {
     }
 

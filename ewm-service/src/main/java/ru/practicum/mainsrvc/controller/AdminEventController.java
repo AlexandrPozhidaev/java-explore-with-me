@@ -1,6 +1,8 @@
 package ru.practicum.mainsrvc.controller;
 
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,12 +13,13 @@ import ru.practicum.mainsrvc.entity.EventStatus;
 import ru.practicum.mainsrvc.service.EventService;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
 @RequestMapping("/admin/events")
 public class AdminEventController {
+
+    private static final Logger log = LoggerFactory.getLogger(AdminEventController.class);
 
     private final EventService eventService;
 
@@ -26,7 +29,7 @@ public class AdminEventController {
 
     @GetMapping
     public ResponseEntity<List<EventFullDto>> getAdminEvents(
-            @RequestParam(required = false) List<String> states,
+            @RequestParam(required = false) List<EventStatus> states,
             @RequestParam(required = false)
             @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
             @RequestParam(required = false)
@@ -36,17 +39,21 @@ public class AdminEventController {
             @RequestParam(required = false) List<Long> users,
             @RequestParam(required = false) List<Long> categories) {
 
-        List<EventStatus> statusList = null;
-
-        if (states != null && !states.isEmpty()) {
-            statusList = new ArrayList<>(states.size());
-            for (String s : states) {
-                statusList.add(EventStatus.valueOf(s));
-            }
+        if (from < 0) {
+            throw new IllegalArgumentException("from не может быть отрицательным");
+        }
+        if (size <= 0 || size > 1000) {
+            throw new IllegalArgumentException("size должен быть от 1 до 1000");
         }
 
+        if (rangeStart != null && rangeEnd != null && rangeEnd.isBefore(rangeStart)) {
+            throw new IllegalArgumentException("rangeEnd не может быть раньше rangeStart");
+        }
+
+        log.debug("Admin events request: states={}, users={}, categories={}", states, users, categories);
+
         List<EventFullDto> events = eventService.getAdminEventsWithFilters(
-                statusList, rangeStart, rangeEnd, from, size, users, categories
+                states, rangeStart, rangeEnd, from, size, users, categories
         );
 
         return ResponseEntity.ok(events);
@@ -63,6 +70,10 @@ public class AdminEventController {
     public ResponseEntity<EventFullDto> updateEventStateByAdmin(
             @PathVariable Long eventId,
             @RequestBody StateActionDto dto) {
+
+        if (dto == null || dto.getStateAction() == null) {
+            throw new IllegalArgumentException("stateAction не может быть null");
+        }
 
         switch (dto.getStateAction()) {
             case PUBLISH_EVENT:

@@ -5,7 +5,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.mainsrvc.dto.CompilationCreatedDto;
 import ru.practicum.mainsrvc.dto.CompilationDto;
 import ru.practicum.mainsrvc.dto.NewCompilationDto;
 import ru.practicum.mainsrvc.dto.UpdateCompilationDto;
@@ -23,8 +22,8 @@ public class AdminCompilationController {
     }
 
     @PostMapping
-    public ResponseEntity<CompilationCreatedDto> createCompilation(@Valid @RequestBody NewCompilationDto dto) {
-        CompilationCreatedDto created = compilationService.createCompilation(dto);
+    public ResponseEntity<CompilationDto> createCompilation(@Valid @RequestBody NewCompilationDto dto) {
+        CompilationDto created = compilationService.createCompilation(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 

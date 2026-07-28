@@ -6,23 +6,11 @@ import java.time.LocalDateTime;
 
 public class ParticipationRequestDto {
     private Long id;
+    private Long event;
     private Long requester;
-    private Long eventId;
-    private String comment;
     private RequestStatus status;
     private LocalDateTime created;
-
-    public ParticipationRequestDto(Long id, Long requester, Long event, String comment, RequestStatus status, LocalDateTime created) {
-        this.id = id;
-        this.requester = requester;
-        this.eventId = event;
-        this.comment = comment;
-        this.status = status;
-        this.created = created;
-    }
-
-    public ParticipationRequestDto() {
-    }
+    private String comment;
 
     public Long getId() {
         return id;
@@ -32,28 +20,20 @@ public class ParticipationRequestDto {
         this.id = id;
     }
 
-    public Long getRequester() {        // исправлено: было getRequesterId()
+    public Long getEvent() {
+        return event;
+    }
+
+    public void setEvent(Long event) {
+        this.event = event;
+    }
+
+    public Long getRequester() {
         return requester;
     }
 
-    public void setRequester(Long requester) {   // исправлено: было setRequesterId
+    public void setRequester(Long requester) {
         this.requester = requester;
-    }
-
-    public Long getEventId() {
-        return eventId;
-    }
-
-    public void setEventId(Long eventId) {
-        this.eventId = eventId;
-    }
-
-    public String getComment() {
-        return comment;
-    }
-
-    public void setComment(String comment) {
-        this.comment = comment;
     }
 
     public RequestStatus getStatus() {
@@ -70,5 +50,13 @@ public class ParticipationRequestDto {
 
     public void setCreated(LocalDateTime created) {
         this.created = created;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 }

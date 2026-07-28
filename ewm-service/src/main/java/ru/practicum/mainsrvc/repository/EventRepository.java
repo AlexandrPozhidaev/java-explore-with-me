@@ -16,7 +16,8 @@ import java.util.Optional;
 @Repository
 public interface EventRepository extends JpaRepository<Event, Long> {
 
-    Optional<Event> findByIdAndState(Long id, EventStatus state);
+    @Query("SELECT e FROM Event e WHERE e.id = :id AND e.state = :state")
+    Optional<Event> findByIdAndState(@Param("id") Long id, @Param("state") EventStatus state);
 
     @Query("SELECT e FROM Event e " +
             "WHERE (:states IS NULL OR e.state IN :states) " +
@@ -36,14 +37,14 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     @Query("SELECT e FROM Event e " +
             "WHERE e.state = 'PUBLISHED' " +
             "AND (:paid IS NULL OR e.paid = :paid) " +
-            "AND (COALESCE(:text, '') = '' OR " +
-            "(LOWER(e.annotation) LIKE :textPattern OR LOWER(e.description) LIKE :textPattern)) " +
+            "AND (:text IS NULL OR " +
+            "LOWER(e.annotation) LIKE LOWER(CONCAT('%', :text, '%')) OR " +
+            "LOWER(e.description) LIKE LOWER(CONCAT('%', :text, '%'))) " +
             "AND e.eventDate >= :rangeStart " +
             "AND (:rangeEnd IS NULL OR e.eventDate <= :rangeEnd)")
     Page<Event> findPublishedWithoutCategories(
             @Param("paid") Boolean paid,
             @Param("text") String text,
-            @Param("textPattern") String textPattern,
             @Param("rangeStart") LocalDateTime rangeStart,
             @Param("rangeEnd") LocalDateTime rangeEnd,
             Pageable pageable
@@ -53,9 +54,9 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             "WHERE e.state = 'PUBLISHED' " +
             "AND (:categories IS NULL OR e.category.id IN :categories) " +
             "AND (:paid IS NULL OR e.paid = :paid) " +
-            "AND (COALESCE(:text, '') = '' OR " +
-            "(LOWER(e.annotation) LIKE CONCAT('%', LOWER(:text), '%') OR " +
-            "LOWER(e.description) LIKE CONCAT('%', LOWER(:text), '%'))) " +
+            "AND (:text IS NULL OR " +
+            "LOWER(e.annotation) LIKE LOWER(CONCAT('%', :text, '%')) OR " +
+            "LOWER(e.description) LIKE LOWER(CONCAT('%', :text, '%'))) " +
             "AND e.eventDate >= :rangeStart " +
             "AND (:rangeEnd IS NULL OR e.eventDate <= :rangeEnd)")
     Page<Event> findPublishedWithCategories(

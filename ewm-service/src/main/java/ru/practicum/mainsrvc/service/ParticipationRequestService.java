@@ -5,7 +5,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.mainsrvc.dto.CreateRequestDto;
 import ru.practicum.mainsrvc.dto.ParticipationRequestDto;
 import ru.practicum.mainsrvc.entity.*;
 import ru.practicum.mainsrvc.exception.ConflictException;
@@ -35,7 +34,7 @@ public class ParticipationRequestService {
         this.userRepository = userRepository;
     }
 
-    public ParticipationRequestDto createRequest(Long userId, Long eventId, CreateRequestDto dto) {
+    public ParticipationRequestDto createRequest(Long userId, Long eventId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
@@ -57,7 +56,9 @@ public class ParticipationRequestService {
         }
 
         long confirmedCount = requestRepository.countConfirmedByEventId(eventId);
-        if (confirmedCount >= event.getParticipantLimit()) {
+        Integer participantLimit = event.getParticipantLimit();
+
+        if (participantLimit != null && participantLimit > 0 && confirmedCount >= participantLimit) {
             throw new ConflictException("Достигнут лимит участников для этого события");
         }
 
@@ -65,9 +66,11 @@ public class ParticipationRequestService {
         request.setCreated(LocalDateTime.now());
         request.setEvent(event);
         request.setRequesterId(userId);
-        request.setComment(dto.getComment());
+        request.setComment(null);
 
-        if (!event.getRequestModeration()) {
+        if (participantLimit != null && participantLimit == 0) {
+            request.setStatus(RequestStatus.CONFIRMED);
+        } else if (!event.getRequestModeration()) {
             request.setStatus(RequestStatus.CONFIRMED);
         } else {
             request.setStatus(RequestStatus.PENDING);
@@ -88,26 +91,23 @@ public class ParticipationRequestService {
         return requests.stream().map(this::toDto).collect(Collectors.toList());
     }
 
-    public ParticipationRequestDto approveRequestByInitiator(Long requestId, Long initiatorId) {
-        ParticipationRequest req = requestRepository.findById(requestId)
-                .orElseThrow(() -> new NotFoundException("Запрос не найден"));
+    public ParticipationRequestDto approveRequest(Long requestId, Long initiatorId) {
+        return approveOrReject(requestId, initiatorId, RequestStatus.CONFIRMED);
+    }
 
-        Event event = req.getEvent();
-        Long eventInitiatorId = event.getInitiator() != null ? event.getInitiator().getId() : null;
-
-        if (!Objects.equals(eventInitiatorId, initiatorId)) {
-            throw new IllegalStateException("Только инициатор события может подтвердить запрос");
-        }
-
-        req.setStatus(RequestStatus.CONFIRMED);
-        req = requestRepository.save(req);
-        return toDto(req);
+    public ParticipationRequestDto rejectRequest(Long requestId, Long initiatorId) {
+        return approveOrReject(requestId, initiatorId, RequestStatus.REJECTED);
     }
 
     public ParticipationRequestDto approveOrReject(Long requestId, Long initiatorId, RequestStatus status) {
-        // ВАЖНО: проверка на null
         if (requestId == null) {
             throw new IllegalArgumentException("requestId не может быть null");
+        }
+        if (initiatorId == null) {
+            throw new IllegalArgumentException("initiatorId не может быть null");
+        }
+        if (status == null) {
+            throw new IllegalArgumentException("status не может быть null");
         }
 
         ParticipationRequest req = requestRepository.findById(requestId)
@@ -118,6 +118,18 @@ public class ParticipationRequestService {
 
         if (!Objects.equals(eventInitiatorId, initiatorId)) {
             throw new IllegalStateException("Только инициатор события может изменить статус запроса");
+        }
+
+        if (req.getStatus() != RequestStatus.PENDING) {
+            throw new ConflictException("Можно обрабатывать только заявки в статусе PENDING");
+        }
+
+        if (status == RequestStatus.CONFIRMED) {
+            long confirmedCount = requestRepository.countConfirmedByEventId(event.getId());
+            Integer participantLimit = event.getParticipantLimit();
+            if (participantLimit != null && participantLimit > 0 && confirmedCount >= participantLimit) {
+                throw new ConflictException("Достигнут лимит участников для этого события");
+            }
         }
 
         req.setStatus(status);
@@ -152,7 +164,7 @@ public class ParticipationRequestService {
         ParticipationRequestDto dto = new ParticipationRequestDto();
         dto.setId(r.getId());
         dto.setCreated(r.getCreated());
-        dto.setEventId(r.getEvent().getId());
+        dto.setEvent(r.getEvent().getId());
         dto.setRequester(r.getRequesterId());
         dto.setComment(r.getComment());
         dto.setStatus(r.getStatus());

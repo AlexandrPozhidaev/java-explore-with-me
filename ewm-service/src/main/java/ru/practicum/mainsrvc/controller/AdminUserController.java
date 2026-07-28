@@ -16,6 +16,9 @@ public class AdminUserController {
 
     private final UserService userService;
 
+    private static final int MAX_PAGE_SIZE = 1000;
+    private static final int MIN_PAGE_SIZE = 1;
+
     public AdminUserController(UserService userService) {
         this.userService = userService;
     }
@@ -28,9 +31,27 @@ public class AdminUserController {
 
     @GetMapping
     public ResponseEntity<List<UserShortDto>> getUsers(
+            @RequestParam(required = false) List<Long> ids,
             @RequestParam(defaultValue = "0") int from,
             @RequestParam(defaultValue = "10") int size) {
-        List<UserShortDto> users = userService.getAllUsers(from, size);
+
+        if (from < 0) {
+            throw new IllegalArgumentException("Параметр 'from' должен быть >= 0");
+        }
+        if (size < MIN_PAGE_SIZE || size > MAX_PAGE_SIZE) {
+            throw new IllegalArgumentException(
+                    String.format("Размер страницы (size) должен быть от %d до %d",
+                            MIN_PAGE_SIZE, MAX_PAGE_SIZE)
+            );
+        }
+
+        List<UserShortDto> users;
+        if (ids != null && !ids.isEmpty()) {
+            users = userService.getUsersByIds(ids);
+        } else {
+            users = userService.getAllUsers(from, size);
+        }
+
         return ResponseEntity.ok(users);
     }
 

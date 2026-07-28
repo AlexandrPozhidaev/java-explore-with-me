@@ -11,12 +11,9 @@ import ru.practicum.mainsrvc.entity.Compilation;
 @Repository
 public interface CompilationRepository extends JpaRepository<Compilation, Long> {
 
-    Page<Compilation> findByPinnedIsTrue(Pageable pageable);
-
-    Page<Compilation> findByPinnedIsFalse(Pageable pageable);
+    @Query("SELECT c FROM Compilation c " +
+            "WHERE (:pinned IS NULL OR c.pinned = :pinned)")
+    Page<Compilation> findAllOrByPinned(@Param("pinned") Boolean pinned, Pageable pageable);
 
     boolean existsByTitle(String title);
-
-    @Query("SELECT c FROM Compilation c WHERE (:pinned IS NULL OR c.pinned = :pinned)")
-    Page<Compilation> findAllOrByPinned(@Param("pinned") Boolean pinned, Pageable pageable);
 }

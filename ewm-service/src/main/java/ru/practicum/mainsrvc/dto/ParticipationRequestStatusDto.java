@@ -3,13 +3,8 @@ package ru.practicum.mainsrvc.dto;
 import ru.practicum.mainsrvc.entity.RequestStatus;
 
 public class ParticipationRequestStatusDto {
-
     private Long requestId;
-
     private RequestStatus status;
-
-    public ParticipationRequestStatusDto() {
-    }
 
     public Long getRequestId() {
         return requestId;

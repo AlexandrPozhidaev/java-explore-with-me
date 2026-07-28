@@ -58,6 +58,7 @@ public class Event {
     @Column(name = "created_on", updatable = false)
     private LocalDateTime createdOn;
 
+    @Column(name = "published_on")
     private LocalDateTime publishedOn;
 
     private Double locationLat;
