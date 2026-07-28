@@ -1,8 +1,11 @@
 package ru.practicum.mainsrvc.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+
+import java.time.LocalDateTime;
 
 public class UserFullDto {
 
@@ -18,6 +21,9 @@ public class UserFullDto {
     private String email;
 
     private Boolean active;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime created;
 
     public UserFullDto(Long id, String name, String email, Boolean active) {
         this.id = id;
@@ -59,5 +65,13 @@ public class UserFullDto {
 
     public void setActive(Boolean active) {
         this.active = active;
+    }
+
+    public LocalDateTime getCreated() {
+        return created;
+    }
+
+    public void setCreated(LocalDateTime created) {
+        this.created = created;
     }
 }

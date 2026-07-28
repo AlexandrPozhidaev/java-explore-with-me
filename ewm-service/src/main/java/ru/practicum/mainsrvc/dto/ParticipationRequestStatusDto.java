@@ -2,16 +2,19 @@ package ru.practicum.mainsrvc.dto;
 
 import ru.practicum.mainsrvc.entity.RequestStatus;
 
+import java.util.List;
+
 public class ParticipationRequestStatusDto {
-    private Long requestId;
+
+    private List<Long> requestIds;
     private RequestStatus status;
 
-    public Long getRequestId() {
-        return requestId;
+    public List<Long> getRequestIds() {
+        return requestIds;
     }
 
-    public void setRequestId(Long requestId) {
-        this.requestId = requestId;
+    public void setRequestIds(List<Long> requestIds) {
+        this.requestIds = requestIds;
     }
 
     public RequestStatus getStatus() {

@@ -97,8 +97,12 @@ public class EventService {
 
     @Transactional(readOnly = true)
     public EventShortDto getEventShortById(Long eventId) {
-        Event event = eventRepository.findByIdAndState(eventId, EventStatus.PUBLISHED)
+        Event event = eventRepository.findByIdWithDetails(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие не найдено или не опубликовано"));
+
+        if (event.getState() != EventStatus.PUBLISHED) {
+            throw new NotFoundException("Событие ещё не опубликовано");
+        }
 
         Map<String, Long> hitsMap = getHitsMapForEvent(eventId);
 
@@ -107,7 +111,7 @@ public class EventService {
 
     @Transactional(readOnly = true)
     public EventFullDto getEventFullByIdForPublicWithStats(Long eventId) {
-        Event event = eventRepository.findById(eventId)
+        Event event = eventRepository.findByIdWithDetails(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие не найдено"));
 
         if (event.getState() != EventStatus.PUBLISHED) {
@@ -150,6 +154,11 @@ public class EventService {
         event.setInitiator(initiator);
         event.setState(EventStatus.PENDING);
 
+        if (dto.getLocation() != null) {
+            event.setLocationLat(dto.getLocation().getLat());
+            event.setLocationLon(dto.getLocation().getLon());
+        }
+
         event = eventRepository.save(event);
         log.info("Событие создано: id={}, title={}, initiatorId={}", event.getId(), event.getTitle(), initiatorId);
 
@@ -181,7 +190,7 @@ public class EventService {
 
     @Transactional
     public EventFullDto updateEventState(Long userId, Long eventId, StateActionDto dto) {
-        Event event = eventRepository.findById(eventId)
+        Event event = eventRepository.findByIdWithDetails(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие не найдено"));
 
         if (!event.getInitiator().getId().equals(userId)) {
@@ -194,16 +203,20 @@ public class EventService {
             );
         }
 
-        switch (dto.getStateAction()) {
+        EventAction action = dto.getStateAction();
+
+        switch (action) {
             case SEND_TO_REVIEW:
                 log.debug("Событие id={} отправлено на модерацию", eventId);
                 break;
-            case CANCEL:
+
+            case CANCEL_REVIEW:
                 event.setState(EventStatus.CANCELED);
                 log.info("Событие id={} отменено пользователем id={}", eventId, userId);
                 break;
+
             default:
-                throw new IllegalArgumentException("Неизвестное действие: " + dto.getStateAction());
+                throw new IllegalArgumentException("Неизвестное действие: " + action);
         }
 
         event = eventRepository.save(event);
@@ -212,14 +225,16 @@ public class EventService {
 
     @Transactional(readOnly = true)
     public EventFullDto getEventFullByIdForUser(Long eventId, Long userId) {
-        Event event = eventRepository.findById(eventId)
+        Event event = eventRepository.findByIdWithDetails(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие не найдено"));
 
         if (!event.getInitiator().getId().equals(userId)) {
             throw new EntityNotFoundException("Не хватает прав на просмотр страницы");
         }
 
-        return toEventFullDto(event, Collections.emptyMap());
+        Map<String, Long> hitsMap = getHitsMapForEvent(eventId);
+
+        return toEventFullDto(event, hitsMap);
     }
 
     @Transactional(readOnly = true)
@@ -233,8 +248,11 @@ public class EventService {
         Pageable pageable = PageRequest.of(from / size, size);
         Page<Event> eventsPage = eventRepository.findAllByInitiatorId(userId, pageable);
 
-        return eventsPage.getContent().stream()
-                .map(this::toEventShortDto)
+        List<Event> events = eventsPage.getContent();
+        Map<String, Long> hitsMap = getHitsMapForEvents(events);
+
+        return events.stream()
+                .map(e -> toEventShortDto(e, hitsMap))
                 .collect(Collectors.toList());
     }
 
@@ -754,24 +772,50 @@ public class EventService {
                     .orElseThrow(() -> new NotFoundException("Категория не найдена"));
             event.setCategory(category);
         }
-    }
-
-    private EventShortDto toEventShortDto(Event e) {
-        return toEventShortDto(e, Collections.emptyMap());
+        if (dto.getLocationLat() != null) {
+            event.setLocationLat(dto.getLocationLat());
+        }
+        if (dto.getLocationLon() != null) {
+            event.setLocationLon(dto.getLocationLon());
+        }
     }
 
     private EventShortDto toEventShortDto(Event e, Map<String, Long> hitsMap) {
         EventShortDto dto = new EventShortDto();
         dto.setId(e.getId());
         dto.setTitle(e.getTitle());
+        dto.setAnnotation(e.getAnnotation());
         dto.setPinned(e.isPinned());
         dto.setPaid(e.isPaid());
         dto.setEventDate(e.getEventDate());
 
+        if (e.getCategory() != null) {
+            CategoryDto categoryDto = new CategoryDto();
+            categoryDto.setId(e.getCategory().getId());
+            categoryDto.setName(e.getCategory().getName());
+            dto.setCategory(categoryDto);
+        }
+
+        if (e.getInitiator() != null) {
+            UserShortDto initiatorDto = new UserShortDto();
+            initiatorDto.setId(e.getInitiator().getId());
+            initiatorDto.setName(e.getInitiator().getName());
+            initiatorDto.setEmail(e.getInitiator().getEmail());
+            dto.setInitiator(initiatorDto);
+        }
+
         String uri = "/events/" + e.getId();
-        dto.setViews(hitsMap != null ? hitsMap.getOrDefault(uri, 0L) : 0L);
+        Long views = hitsMap != null ? hitsMap.getOrDefault(uri, 0L) : 0L;
+        dto.setViews(views);
+
+        Long confirmedRequests = requestRepository.countConfirmedByEventId(e.getId());
+        dto.setConfirmedRequests(confirmedRequests);
 
         return dto;
+    }
+
+    private EventShortDto toEventShortDto(Event e) {
+        return toEventShortDto(e, Collections.emptyMap());
     }
 
     private EventFullDto toEventFullDto(Event e, Map<String, Long> hitsMap) {
@@ -786,9 +830,38 @@ public class EventService {
         dto.setPaid(e.isPaid());
         dto.setRequestModeration(e.isRequestModeration());
         dto.setState(e.getState());
+        dto.setCreatedOn(e.getCreatedOn());
+        dto.setPublishedOn(e.getPublishedOn());
+
+        if (e.getCategory() != null) {
+            CategoryDto categoryDto = new CategoryDto();
+            categoryDto.setId(e.getCategory().getId());
+            categoryDto.setName(e.getCategory().getName());
+            dto.setCategory(categoryDto);
+        }
+
+        if (e.getInitiator() != null) {
+            UserShortDto initiatorDto = new UserShortDto();
+            initiatorDto.setId(e.getInitiator().getId());
+            initiatorDto.setName(e.getInitiator().getName());
+            initiatorDto.setEmail(e.getInitiator().getEmail());
+            initiatorDto.setActive(e.getInitiator().getActive());
+            dto.setInitiator(initiatorDto);
+        }
+
+        if (e.getLocationLat() != null && e.getLocationLon() != null) {
+            LocationDto locationDto = new LocationDto();
+            locationDto.setLat(e.getLocationLat());
+            locationDto.setLon(e.getLocationLon());
+            dto.setLocation(locationDto);
+        }
 
         String uri = "/events/" + e.getId();
-        dto.setViews(hitsMap != null ? hitsMap.getOrDefault(uri, 0L) : 0L);
+        Long views = hitsMap != null ? hitsMap.getOrDefault(uri, 0L) : 0L;
+        dto.setViews(views);
+
+        Long confirmedRequests = requestRepository.countConfirmedByEventId(e.getId());
+        dto.setConfirmedRequests(confirmedRequests);
 
         return dto;
     }

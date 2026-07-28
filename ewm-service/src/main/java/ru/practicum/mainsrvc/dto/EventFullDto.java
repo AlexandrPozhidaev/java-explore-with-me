@@ -1,5 +1,6 @@
 package ru.practicum.mainsrvc.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import ru.practicum.mainsrvc.entity.EventStatus;
@@ -16,6 +17,7 @@ public class EventFullDto {
 
     private String description;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", shape = JsonFormat.Shape.STRING)
     private LocalDateTime eventDate;
 
     private Integer participantLimit;
@@ -39,8 +41,10 @@ public class EventFullDto {
 
     private EventStatus state;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", shape = JsonFormat.Shape.STRING)
     private LocalDateTime createdOn;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", shape = JsonFormat.Shape.STRING)
     private LocalDateTime publishedOn;
 
     private LocationDto location;

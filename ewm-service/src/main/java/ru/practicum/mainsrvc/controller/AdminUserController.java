@@ -61,14 +61,15 @@ public class AdminUserController {
         return ResponseEntity.ok(user);
     }
 
-    @PatchMapping("/{userId}/activate")
-    public ResponseEntity<UserShortDto> activateUser(@PathVariable Long userId) {
-        return ResponseEntity.ok(userService.activateUser(userId));
-    }
-
     @DeleteMapping("/{userId}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long userId) {
         userService.deleteUser(userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Void> deleteUsers(@RequestParam List<Long> ids) {
+        userService.deleteUsers(ids);
         return ResponseEntity.noContent().build();
     }
 }

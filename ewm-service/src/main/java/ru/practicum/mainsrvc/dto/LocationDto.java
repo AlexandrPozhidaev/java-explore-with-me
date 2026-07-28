@@ -1,32 +1,28 @@
 package ru.practicum.mainsrvc.dto;
 
+import jakarta.validation.constraints.NotNull;
+
 public class LocationDto {
 
-    private double lat;
+    @NotNull(message = "Широта обязательна")
+    private Double lat;
 
-    private double lon;
+    @NotNull(message = "Долгота обязательна")
+    private Double lon;
 
-    public LocationDto() {
-    }
-
-    public LocationDto(double lat, double lon) {
-        this.lat = lat;
-        this.lon = lon;
-    }
-
-    public double getLat() {
+    public Double getLat() {
         return lat;
     }
 
-    public void setLat(double lat) {
+    public void setLat(Double lat) {
         this.lat = lat;
     }
 
-    public double getLon() {
+    public Double getLon() {
         return lon;
     }
 
-    public void setLon(double lon) {
+    public void setLon(Double lon) {
         this.lon = lon;
     }
 }

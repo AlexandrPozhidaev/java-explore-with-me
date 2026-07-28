@@ -70,17 +70,26 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}/events/{eventId}/requests")
-    public ResponseEntity<ParticipationRequestDto> approveOrRejectRequest(
+    public ResponseEntity<List<ParticipationRequestDto>> approveOrRejectRequest(
             @PathVariable Long userId,
             @PathVariable Long eventId,
             @RequestBody ParticipationRequestStatusDto dto) {
 
-        if (dto == null || dto.getRequestId() == null) {
-            throw new IllegalArgumentException("requestId не может быть null");
+        if (dto == null) {
+            throw new IllegalArgumentException("requestIds не может быть null");
         }
 
-        ParticipationRequestDto result = participationRequestService.approveOrReject(
-                dto.getRequestId(), userId, dto.getStatus());
+        if (dto.getRequestIds() == null || dto.getRequestIds().isEmpty()) {
+            throw new IllegalArgumentException("requestIds не может быть пустым");
+        }
+
+        if (dto.getStatus() == null) {
+            throw new IllegalArgumentException("status не может быть null");
+        }
+
+        List<ParticipationRequestDto> result = participationRequestService.processRequestStatus(
+                userId, eventId, dto);
+
         return ResponseEntity.ok(result);
     }
 
@@ -121,7 +130,20 @@ public class UserController {
             @PathVariable Long eventId,
             @RequestBody StateActionDto stateActionDto) {
 
+        if (stateActionDto == null || stateActionDto.getStateAction() == null) {
+            throw new IllegalArgumentException("stateAction не может быть null");
+        }
+
         EventFullDto result = eventService.updateEventState(userId, eventId, stateActionDto);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/{userId}/events/{eventId}")
+    public ResponseEntity<EventFullDto> getEventFullById(
+            @PathVariable Long userId,
+            @PathVariable Long eventId) {
+
+        EventFullDto result = eventService.getEventFullByIdForUser(eventId, userId);
         return ResponseEntity.ok(result);
     }
 

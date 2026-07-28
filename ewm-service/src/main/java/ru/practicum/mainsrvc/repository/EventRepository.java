@@ -16,10 +16,27 @@ import java.util.Optional;
 @Repository
 public interface EventRepository extends JpaRepository<Event, Long> {
 
-    @Query("SELECT e FROM Event e WHERE e.id = :id AND e.state = :state")
+    @Query("SELECT e FROM Event e " +
+            "JOIN FETCH e.category " +
+            "JOIN FETCH e.initiator " +
+            "WHERE e.id = :id AND e.state = :state")
     Optional<Event> findByIdAndState(@Param("id") Long id, @Param("state") EventStatus state);
 
     @Query("SELECT e FROM Event e " +
+            "JOIN FETCH e.category " +
+            "JOIN FETCH e.initiator " +
+            "WHERE e.id = :eventId AND e.initiator.id = :initiatorId")
+    Optional<Event> findByIdAndInitiator(@Param("eventId") Long eventId, @Param("initiatorId") Long initiatorId);
+
+    @Query("SELECT e FROM Event e " +
+            "JOIN FETCH e.category " +
+            "JOIN FETCH e.initiator " +
+            "WHERE e.initiator.id = :initiatorId")
+    Page<Event> findAllByInitiatorId(@Param("initiatorId") Long initiatorId, Pageable pageable);
+
+    @Query("SELECT e FROM Event e " +
+            "JOIN FETCH e.category " +
+            "JOIN FETCH e.initiator " +
             "WHERE e.state IN :states " +
             "AND e.eventDate >= :rangeStart " +
             "AND e.eventDate <= :rangeEnd " +
@@ -34,6 +51,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             Pageable pageable);
 
     @Query("SELECT e FROM Event e " +
+            "JOIN FETCH e.category " +
+            "JOIN FETCH e.initiator " +
             "WHERE e.state IN :states " +
             "AND e.eventDate >= :rangeStart " +
             "AND e.eventDate <= :rangeEnd " +
@@ -46,6 +65,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             Pageable pageable);
 
     @Query("SELECT e FROM Event e " +
+            "JOIN FETCH e.category " +
+            "JOIN FETCH e.initiator " +
             "WHERE e.state IN :states " +
             "AND e.eventDate >= :rangeStart " +
             "AND e.eventDate <= :rangeEnd " +
@@ -58,6 +79,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             Pageable pageable);
 
     @Query("SELECT e FROM Event e " +
+            "JOIN FETCH e.category " +
+            "JOIN FETCH e.initiator " +
             "WHERE e.state IN :states " +
             "AND e.eventDate >= :rangeStart " +
             "AND e.eventDate <= :rangeEnd")
@@ -68,6 +91,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             Pageable pageable);
 
     @Query("SELECT e FROM Event e " +
+            "JOIN FETCH e.category " +
+            "JOIN FETCH e.initiator " +
             "WHERE e.state = 'PUBLISHED' " +
             "AND e.paid = :paid " +
             "AND (LOWER(e.annotation) LIKE LOWER(CONCAT('%', :text, '%')) OR " +
@@ -82,6 +107,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             Pageable pageable);
 
     @Query("SELECT e FROM Event e " +
+            "JOIN FETCH e.category " +
+            "JOIN FETCH e.initiator " +
             "WHERE e.state = 'PUBLISHED' " +
             "AND e.paid = :paid " +
             "AND e.eventDate >= :rangeStart " +
@@ -93,6 +120,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             Pageable pageable);
 
     @Query("SELECT e FROM Event e " +
+            "JOIN FETCH e.category " +
+            "JOIN FETCH e.initiator " +
             "WHERE e.state = 'PUBLISHED' " +
             "AND (LOWER(e.annotation) LIKE LOWER(CONCAT('%', :text, '%')) OR " +
             "LOWER(e.description) LIKE LOWER(CONCAT('%', :text, '%'))) " +
@@ -105,6 +134,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             Pageable pageable);
 
     @Query("SELECT e FROM Event e " +
+            "JOIN FETCH e.category " +
+            "JOIN FETCH e.initiator " +
             "WHERE e.state = 'PUBLISHED' " +
             "AND e.eventDate >= :rangeStart " +
             "AND e.eventDate <= :rangeEnd")
@@ -114,6 +145,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             Pageable pageable);
 
     @Query("SELECT e FROM Event e " +
+            "JOIN FETCH e.category " +
+            "JOIN FETCH e.initiator " +
             "WHERE e.state = 'PUBLISHED' " +
             "AND e.category.id IN :categories " +
             "AND e.paid = :paid " +
@@ -130,6 +163,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             Pageable pageable);
 
     @Query("SELECT e FROM Event e " +
+            "JOIN FETCH e.category " +
+            "JOIN FETCH e.initiator " +
             "WHERE e.state = 'PUBLISHED' " +
             "AND e.category.id IN :categories " +
             "AND e.paid = :paid " +
@@ -143,6 +178,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             Pageable pageable);
 
     @Query("SELECT e FROM Event e " +
+            "JOIN FETCH e.category " +
+            "JOIN FETCH e.initiator " +
             "WHERE e.state = 'PUBLISHED' " +
             "AND e.category.id IN :categories " +
             "AND (LOWER(e.annotation) LIKE LOWER(CONCAT('%', :text, '%')) OR " +
@@ -157,6 +194,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             Pageable pageable);
 
     @Query("SELECT e FROM Event e " +
+            "JOIN FETCH e.category " +
+            "JOIN FETCH e.initiator " +
             "WHERE e.state = 'PUBLISHED' " +
             "AND e.category.id IN :categories " +
             "AND e.eventDate >= :rangeStart " +
@@ -167,9 +206,12 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             @Param("rangeEnd") LocalDateTime rangeEnd,
             Pageable pageable);
 
-    @Query("SELECT e FROM Event e WHERE e.id = :eventId AND e.initiator.id = :initiatorId")
-    Optional<Event> findByIdAndInitiator(@Param("eventId") Long eventId, @Param("initiatorId") Long initiatorId);
+    @Query("SELECT e FROM Event e WHERE e.id = :eventId")
+    Optional<Event> findById(@Param("eventId") Long eventId);
 
-    @Query("SELECT e FROM Event e WHERE e.initiator.id = :initiatorId")
-    Page<Event> findAllByInitiatorId(@Param("initiatorId") Long initiatorId, Pageable pageable);
-}
+    @Query("SELECT e FROM Event e " +
+            "JOIN FETCH e.category " +
+            "JOIN FETCH e.initiator " +
+            "WHERE e.id = :eventId")
+    Optional<Event> findByIdWithDetails(@Param("eventId") Long eventId);
+    }

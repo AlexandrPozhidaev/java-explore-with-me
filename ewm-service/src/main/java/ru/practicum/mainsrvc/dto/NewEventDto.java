@@ -19,7 +19,7 @@ public class NewEventDto {
     private String description;
 
     @NotNull(message = "Дата события обязательна")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", shape = JsonFormat.Shape.STRING)
     private LocalDateTime eventDate;
 
     @NotNull(message = "Лимит участников обязателен")

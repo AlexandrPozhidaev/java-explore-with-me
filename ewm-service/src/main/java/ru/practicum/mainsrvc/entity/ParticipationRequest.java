@@ -1,7 +1,6 @@
 package ru.practicum.mainsrvc.entity;
 
 import jakarta.persistence.*;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -12,25 +11,22 @@ public class ParticipationRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "requester_id", nullable = false)
-    private Long requesterId;
+    @Column(name = "created")
+    private LocalDateTime created;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
 
-    @Column(name = "comment", length = 1024)
+    @Column(name = "requester_id", nullable = false)
+    private Long requesterId;
+
+    @Column(name = "comment")
     private String comment;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, columnDefinition = "VARCHAR(20) DEFAULT 'PENDING'")
+    @Column(name = "status", nullable = false)
     private RequestStatus status;
-
-    @Column(name = "created", nullable = false, updatable = false)
-    private LocalDateTime created;
-
-    public ParticipationRequest() {
-    }
 
     public Long getId() {
         return id;
@@ -40,12 +36,12 @@ public class ParticipationRequest {
         this.id = id;
     }
 
-    public Long getRequesterId() {
-        return requesterId;
+    public LocalDateTime getCreated() {
+        return created;
     }
 
-    public void setRequesterId(Long requesterId) {
-        this.requesterId = requesterId;
+    public void setCreated(LocalDateTime created) {
+        this.created = created;
     }
 
     public Event getEvent() {
@@ -54,6 +50,14 @@ public class ParticipationRequest {
 
     public void setEvent(Event event) {
         this.event = event;
+    }
+
+    public Long getRequesterId() {
+        return requesterId;
+    }
+
+    public void setRequesterId(Long requesterId) {
+        this.requesterId = requesterId;
     }
 
     public String getComment() {
@@ -70,13 +74,5 @@ public class ParticipationRequest {
 
     public void setStatus(RequestStatus status) {
         this.status = status;
-    }
-
-    public LocalDateTime getCreated() {
-        return created;
-    }
-
-    public void setCreated(LocalDateTime created) {
-        this.created = created;
     }
 }

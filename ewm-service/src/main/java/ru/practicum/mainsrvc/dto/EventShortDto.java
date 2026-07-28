@@ -1,34 +1,24 @@
 package ru.practicum.mainsrvc.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.time.LocalDateTime;
 
 public class EventShortDto {
+
     private Long id;
     private String title;
-
+    private String annotation;
     private Boolean pinned;
-
     private Boolean paid;
-
     private Long views;
+    private Long confirmedRequests;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
+
     private CategoryDto category;
     private UserShortDto initiator;
-
-    public EventShortDto(Long id, String title, Boolean pinned, Boolean paid, Long views, LocalDateTime eventDate, CategoryDto category, UserShortDto initiator) {
-        this.id = id;
-        this.title = title;
-        this.pinned = pinned;
-        this.paid = paid;
-        this.views = views;
-        this.eventDate = eventDate;
-        this.category = category;
-        this.initiator = initiator;
-    }
-
-    public EventShortDto() {
-    }
 
     public Long getId() {
         return id;
@@ -44,6 +34,14 @@ public class EventShortDto {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getAnnotation() {
+        return annotation;
+    }
+
+    public void setAnnotation(String annotation) {
+        this.annotation = annotation;
     }
 
     public Boolean getPinned() {
@@ -68,6 +66,14 @@ public class EventShortDto {
 
     public void setViews(Long views) {
         this.views = views;
+    }
+
+    public Long getConfirmedRequests() {
+        return confirmedRequests;
+    }
+
+    public void setConfirmedRequests(Long confirmedRequests) {
+        this.confirmedRequests = confirmedRequests;
     }
 
     public LocalDateTime getEventDate() {

@@ -21,8 +21,16 @@ public interface RequestRepository extends JpaRepository<ParticipationRequest, L
     Page<ParticipationRequest> findAllByRequesterIdAndEventId(
             Long requesterId, Long eventId, Pageable pageable);
 
+    @Query("SELECT COUNT(r) FROM ParticipationRequest r WHERE r.event.id = :eventId AND r.status = :status")
+    long countByEventIdAndStatus(@Param("eventId") Long eventId, @Param("status") RequestStatus status);
+
     @Query("SELECT COUNT(r) FROM ParticipationRequest r WHERE r.event.id = :eventId AND r.status = 'CONFIRMED'")
     long countConfirmedByEventId(@Param("eventId") Long eventId);
+
+    @Query("SELECT r FROM ParticipationRequest r WHERE r.event.id = :eventId AND r.status = :status")
+    List<ParticipationRequest> findByEventIdAndStatus(
+            @Param("eventId") Long eventId,
+            @Param("status") RequestStatus status);
 
     @Query("SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END " +
             "FROM ParticipationRequest r " +
