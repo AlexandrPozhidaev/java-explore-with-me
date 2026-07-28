@@ -64,7 +64,8 @@ public class UserController {
 
         validatePaginationParams(from, size);
 
-        Page<ParticipationRequestDto> page = participationRequestService.getRequestsByUserAndEvent(userId, eventId, from, size);
+        Page<ParticipationRequestDto> page = participationRequestService.getRequestsByUserAndEvent(
+                userId, eventId, from, size);
         return ResponseEntity.ok(page);
     }
 
@@ -128,8 +129,8 @@ public class UserController {
         if (from < 0) {
             throw new IllegalArgumentException("Параметр 'from' должен быть >= 0");
         }
-        if (size <= 0 || size > 100000) {
-            throw new IllegalArgumentException("Параметр 'size' должен быть в диапазоне (0, 100000]");
+        if (size <= 0 || size > 1000) {
+            throw new IllegalArgumentException("Параметр 'size' должен быть в диапазоне (0, 1000]");
         }
     }
 }
