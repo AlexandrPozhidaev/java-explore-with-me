@@ -12,9 +12,9 @@ public class ParticipationRequestDto {
 
     private String status;
 
-    private Long event;
+    private EventShortDto event;
 
-    private Long requester;
+    private UserShortDto requester;
 
     public Long getId() {
         return id;
@@ -41,19 +41,19 @@ public class ParticipationRequestDto {
         this.status = status;
     }
 
-    public Long getEvent() {
+    public EventShortDto getEvent() {
         return event;
     }
 
-    public void setEvent(Long event) {
+    public void setEvent(EventShortDto event) {
         this.event = event;
     }
 
-    public Long getRequester() {
+    public UserShortDto getRequester() {
         return requester;
     }
 
-    public void setRequester(Long requester) {
+    public void setRequester(UserShortDto requester) {
         this.requester = requester;
     }
 }

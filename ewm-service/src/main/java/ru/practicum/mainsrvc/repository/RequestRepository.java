@@ -2,6 +2,7 @@ package ru.practicum.mainsrvc.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,18 +17,11 @@ public interface RequestRepository extends JpaRepository<ParticipationRequest, L
 
     List<ParticipationRequest> findAllByEventId(Long eventId);
 
-    Page<ParticipationRequest> findAllByRequesterId(Long requesterId, Pageable pageable);
+    @EntityGraph(attributePaths = {"event", "event.category", "event.initiator"})
+    Page<ParticipationRequest> findAllByRequesterId(Long userId, Pageable pageable);
 
-    @Query("SELECT r FROM ParticipationRequest r " +
-            "JOIN FETCH r.event " +
-            "JOIN FETCH r.event.category " +
-            "JOIN FETCH r.event.initiator " +
-            "WHERE r.requesterId = :userId AND r.event.id = :eventId")
-    Page<ParticipationRequest> findAllByRequesterIdAndEventId(
-            @Param("userId") Long userId,
-            @Param("eventId") Long eventId,
-            Pageable pageable);
-
+    @EntityGraph(attributePaths = {"event", "event.category", "event.initiator"})
+    Page<ParticipationRequest> findAllByRequesterIdAndEventId(Long userId, Long eventId, Pageable pageable);
 
     @Query("SELECT COUNT(r) FROM ParticipationRequest r WHERE r.event.id = :eventId AND r.status = :status")
     long countByEventIdAndStatus(@Param("eventId") Long eventId, @Param("status") RequestStatus status);

@@ -7,8 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.mainsrvc.dto.ParticipationRequestDto;
-import ru.practicum.mainsrvc.dto.ParticipationRequestStatusDto;
+import ru.practicum.mainsrvc.dto.*;
 import ru.practicum.mainsrvc.entity.*;
 import ru.practicum.mainsrvc.exception.ConflictException;
 import ru.practicum.mainsrvc.exception.NotFoundException;
@@ -73,7 +72,9 @@ public class ParticipationRequestService {
         ParticipationRequest request = new ParticipationRequest();
         request.setCreated(LocalDateTime.now());
         request.setEvent(event);
-        request.setRequesterId(userId);
+        User requester = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
+        request.setRequester(requester);
         request.setComment(null);
 
         if (participantLimit != null && participantLimit == 0) {
@@ -154,7 +155,7 @@ public class ParticipationRequestService {
         ParticipationRequest req = requestRepository.findById(requestId)
                 .orElseThrow(() -> new NotFoundException("Заявка не найдена"));
 
-        if (!Objects.equals(req.getRequesterId(), userId)) {
+        if (!Objects.equals(req.getRequester(), userId)) {
             throw new IllegalStateException("Пользователь может отменять только свои заявки");
         }
 
@@ -306,10 +307,43 @@ public class ParticipationRequestService {
         dto.setStatus(request.getStatus().name());
 
         if (request.getEvent() != null) {
-            dto.setEvent(request.getEvent().getId());
+            Event event = request.getEvent();
+            EventShortDto eventDto = new EventShortDto();
+            eventDto.setId(event.getId());
+            eventDto.setTitle(event.getTitle());
+            eventDto.setAnnotation(event.getAnnotation());
+            eventDto.setEventDate(event.getEventDate());
+            eventDto.setPaid(event.isPaid());
+            eventDto.setPinned(event.isPinned());
+
+            if (event.getCategory() != null) {
+                CategoryDto categoryDto = new CategoryDto();
+                categoryDto.setId(event.getCategory().getId());
+                categoryDto.setName(event.getCategory().getName());
+                eventDto.setCategory(categoryDto);
+            }
+
+            if (event.getInitiator() != null) {
+                UserShortDto initiatorDto = new UserShortDto();
+                initiatorDto.setId(event.getInitiator().getId());
+                initiatorDto.setName(event.getInitiator().getName());
+                initiatorDto.setEmail(event.getInitiator().getEmail());
+                eventDto.setInitiator(initiatorDto);
+            }
+
+            dto.setEvent(eventDto);
         }
 
-        dto.setRequester(request.getRequesterId());
+        if (request.getRequester() != null) {
+            UserShortDto requesterDto = new UserShortDto();
+
+            User requester = request.getRequester();
+            requesterDto.setId(requester.getId());
+            requesterDto.setName(requester.getName());
+            requesterDto.setEmail(requester.getEmail());
+
+            dto.setRequester(requesterDto);
+        }
 
         return dto;
     }

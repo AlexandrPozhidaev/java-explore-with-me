@@ -1,6 +1,7 @@
 package ru.practicum.mainsrvc.entity;
 
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -18,8 +19,9 @@ public class ParticipationRequest {
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
 
-    @Column(name = "requester_id", nullable = false)
-    private Long requesterId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "requester_id", nullable = false)
+    private User requester;
 
     @Column(name = "comment")
     private String comment;
@@ -52,14 +54,6 @@ public class ParticipationRequest {
         this.event = event;
     }
 
-    public Long getRequesterId() {
-        return requesterId;
-    }
-
-    public void setRequesterId(Long requesterId) {
-        this.requesterId = requesterId;
-    }
-
     public String getComment() {
         return comment;
     }
@@ -74,5 +68,13 @@ public class ParticipationRequest {
 
     public void setStatus(RequestStatus status) {
         this.status = status;
+    }
+
+    public User getRequester() {
+        return requester;
+    }
+
+    public void setRequester(User requester) {
+        this.requester = requester;
     }
 }
