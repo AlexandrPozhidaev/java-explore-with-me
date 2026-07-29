@@ -155,7 +155,7 @@ public class ParticipationRequestService {
         ParticipationRequest req = requestRepository.findById(requestId)
                 .orElseThrow(() -> new NotFoundException("Заявка не найдена"));
 
-        if (!Objects.equals(req.getRequester(), userId)) {
+        if (req.getRequester() == null || !req.getRequester().getId().equals(userId)) {
             throw new IllegalStateException("Пользователь может отменять только свои заявки");
         }
 

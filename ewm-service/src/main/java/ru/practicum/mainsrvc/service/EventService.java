@@ -120,14 +120,19 @@ public class EventService {
 
         String uri = "/events/" + event.getId();
 
-        Map<String, Long> hitsMap = getHitsMapForEvent(eventId);
-
         try {
             statClient.hit(uri, "ewm-service", "unknown-ip");
             log.debug("Отправлен просмотр для события {}", eventId);
         } catch (Exception ex) {
             log.warn("Не удалось отправить статистику просмотров для события id={}", eventId, ex);
+            Map<String, Long> hitsMap = getHitsMapForEvent(eventId);
             return toEventFullDto(event, hitsMap);
+        }
+
+        try {
+            Thread.sleep(100); // 100ms
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
 
         Map<String, Long> updatedHitsMap = getHitsMapForEvent(eventId);
