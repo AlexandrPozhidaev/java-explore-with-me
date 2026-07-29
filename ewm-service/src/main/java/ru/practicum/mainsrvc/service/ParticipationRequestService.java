@@ -162,9 +162,9 @@ public class ParticipationRequestService {
             throw new IllegalStateException("Нельзя отменить подтверждённую заявку");
         }
 
-        req.setStatus(RequestStatus.REJECTED);
+        req.setStatus(RequestStatus.CANCELED);
         req = requestRepository.save(req);
-        log.info("Request {} cancelled (rejected) by user {}", requestId, userId);
+        log.info("Запрос {} отменен (отклонен) пользователем {}", requestId, userId);
 
         return toDto(req);
     }
@@ -289,6 +289,14 @@ public class ParticipationRequestService {
             requestRepository.saveAll(pendingRequests);
             log.info("Отклонены все оставшиеся PENDING заявки для события {}", eventId);
         }
+    }
+
+    public List<ParticipationRequestDto> getRequestsByUserAsList(Long userId, int from, int size) {
+        Pageable pageable = PageRequest.of(from / size, size);
+        Page<ParticipationRequest> page = requestRepository.findAllByRequesterId(userId, pageable);
+        return page.getContent().stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
     private ParticipationRequestDto toDto(ParticipationRequest request) {

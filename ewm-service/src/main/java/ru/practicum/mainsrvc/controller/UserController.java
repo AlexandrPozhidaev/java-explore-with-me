@@ -27,7 +27,7 @@ public class UserController {
     }
 
     @GetMapping("/{userId}/requests")
-    public ResponseEntity<Page<ParticipationRequestDto>> getUserRequests(
+    public ResponseEntity<List<ParticipationRequestDto>> getUserRequests(
             @PathVariable Long userId,
             @RequestParam(defaultValue = "0") int from,
             @RequestParam(defaultValue = "10") int size) {
@@ -35,7 +35,10 @@ public class UserController {
         validatePaginationParams(from, size);
 
         Page<ParticipationRequestDto> page = participationRequestService.getRequestsByUser(userId, from, size);
-        return ResponseEntity.ok(page);
+
+        List<ParticipationRequestDto> requests = page.getContent();
+
+        return ResponseEntity.ok(requests);
     }
 
     @PostMapping("/{userId}/requests")
@@ -57,7 +60,7 @@ public class UserController {
     }
 
     @GetMapping("/{userId}/events/{eventId}/requests")
-    public ResponseEntity<Page<ParticipationRequestDto>> getRequestsForUserAndEvent(
+    public ResponseEntity<List<ParticipationRequestDto>> getRequestsForUserAndEvent(
             @PathVariable Long userId,
             @PathVariable Long eventId,
             @RequestParam(defaultValue = "0") int from,
@@ -67,7 +70,7 @@ public class UserController {
 
         Page<ParticipationRequestDto> page = participationRequestService.getRequestsByUserAndEvent(
                 userId, eventId, from, size);
-        return ResponseEntity.ok(page);
+        return ResponseEntity.ok(page.getContent());
     }
 
     @PatchMapping("/{userId}/events/{eventId}/requests")
