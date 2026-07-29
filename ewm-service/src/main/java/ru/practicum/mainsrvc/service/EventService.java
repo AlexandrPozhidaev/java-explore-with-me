@@ -109,7 +109,7 @@ public class EventService {
         return toEventShortDto(event, hitsMap);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public EventFullDto getEventFullByIdForPublicWithStats(Long eventId) {
         Event event = eventRepository.findByIdWithDetails(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие не найдено"));
@@ -118,17 +118,21 @@ public class EventService {
             throw new NotFoundException("Событие ещё не опубликовано");
         }
 
-        eventRepository.incrementViews(eventId);
-        event.setViews(event.getViews() + 1);
+        String uri = "/events/" + event.getId();
+
+        Map<String, Long> hitsMap = getHitsMapForEvent(eventId);
 
         try {
-            String uri = "/events/" + event.getId();
             statClient.hit(uri, "ewm-service", "unknown-ip");
+            log.debug("Отправлен просмотр для события {}", eventId);
         } catch (Exception ex) {
-            log.warn("Не удалось отправить статистику просмотров", ex);
+            log.warn("Не удалось отправить статистику просмотров для события id={}", eventId, ex);
+            return toEventFullDto(event, hitsMap);
         }
 
-        return toEventFullDto(event, Collections.emptyMap());
+        Map<String, Long> updatedHitsMap = getHitsMapForEvent(eventId);
+
+        return toEventFullDto(event, updatedHitsMap);
     }
 
     @Transactional
@@ -175,10 +179,11 @@ public class EventService {
         }
 
         if (dto.getStateAction() != null) {
-            event = applyStateAction(event, dto.getStateAction());
+            throw new ValidationException("Изменение статуса доступно только через отдельный эндпоинт");
         }
 
         validateUpdateEvent(dto, event);
+
         updateEventFields(event, dto);
 
         event = eventRepository.save(event);
@@ -789,37 +794,6 @@ public class EventService {
         if (dto.getLocationLon() != null) {
             event.setLocationLon(dto.getLocationLon());
         }
-    }
-
-    private Event applyStateAction(Event event, EventAction action) {
-        switch (action) {
-            case SEND_TO_REVIEW:
-                if (event.getState() == EventStatus.CANCELED) {
-                    event.setState(EventStatus.PENDING);
-                    log.info("Событие id={} повторно отправлено на модерацию", event.getId());
-                } else if (event.getState() == EventStatus.PENDING) {
-                    log.debug("Событие id={} уже на модерации", event.getId());
-                } else {
-                    throw new ConflictException(
-                            "Нельзя отправить событие на модерацию. Текущий статус: " + event.getState()
-                    );
-                }
-                break;
-
-            case CANCEL_REVIEW:
-                if (event.getState() != EventStatus.PENDING) {
-                    throw new ConflictException(
-                            "Отменить можно только событие в состоянии PENDING. Текущий статус: " + event.getState()
-                    );
-                }
-                event.setState(EventStatus.CANCELED);
-                log.info("Событие id={} отменено", event.getId());
-                break;
-
-            default:
-                throw new IllegalArgumentException("Неизвестное действие: " + action);
-        }
-        return event;
     }
 
     private EventShortDto toEventShortDto(Event e, Map<String, Long> hitsMap) {

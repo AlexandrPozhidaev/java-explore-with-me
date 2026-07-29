@@ -14,7 +14,6 @@ import ru.practicum.mainsrvc.exception.ConflictException;
 import ru.practicum.mainsrvc.exception.NotFoundException;
 import ru.practicum.mainsrvc.repository.UserRepository;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -74,12 +73,14 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public List<UserShortDto> getUsersByIds(List<Long> ids) {
-        if (ids == null || ids.isEmpty()) {
-            return Collections.emptyList();
-        }
-
         List<User> users = userRepository.findAllById(ids);
-
+        if (users.size() != ids.size()) {
+            List<Long> foundIds = users.stream().map(User::getId).collect(Collectors.toList());
+            List<Long> notFound = ids.stream()
+                    .filter(id -> !foundIds.contains(id))
+                    .collect(Collectors.toList());
+            throw new NotFoundException("Пользователи не найдены: " + notFound);
+        }
         return users.stream()
                 .map(this::toShortDto)
                 .collect(Collectors.toList());

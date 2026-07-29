@@ -13,7 +13,7 @@ public class NewCompilationDto {
 
     private String description;
 
-    private Boolean pinned = false;
+    private boolean pinned = false;
 
     private List<Long> events;
 

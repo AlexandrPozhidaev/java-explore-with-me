@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS participation_requests (
     status              VARCHAR(50) NOT NULL DEFAULT 'PENDING',
     created             TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT chk_req_status CHECK (status IN ('PENDING', 'CONFIRMED', 'REJECTED', 'CANCELED'))
+    CONSTRAINT chk_req_status CHECK (status IN ('PENDING', 'CONFIRMED', 'REJECTED', 'CANCELLED'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_requests_event ON participation_requests(event_id);

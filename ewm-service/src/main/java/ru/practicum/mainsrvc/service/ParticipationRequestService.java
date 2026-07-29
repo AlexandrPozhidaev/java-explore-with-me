@@ -7,8 +7,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.mainsrvc.dto.EventShortDto;
 import ru.practicum.mainsrvc.dto.ParticipationRequestDto;
 import ru.practicum.mainsrvc.dto.ParticipationRequestStatusDto;
+import ru.practicum.mainsrvc.dto.UserShortDto;
 import ru.practicum.mainsrvc.entity.*;
 import ru.practicum.mainsrvc.exception.ConflictException;
 import ru.practicum.mainsrvc.exception.NotFoundException;
@@ -299,11 +301,23 @@ public class ParticipationRequestService {
         dto.setComment(request.getComment());
 
         if (request.getEvent() != null) {
-            dto.setEvent(request.getEvent().getId());  // ✅ Long
+            EventShortDto eventDto = new EventShortDto();
+            eventDto.setId(request.getEvent().getId());
+            eventDto.setTitle(request.getEvent().getTitle());
+            eventDto.setAnnotation(request.getEvent().getAnnotation());
+            dto.setEvent(eventDto);
         }
 
         if (request.getRequesterId() != null) {
-            dto.setRequester(request.getRequesterId());  // ✅ Long
+            User user = userRepository.findById(request.getRequesterId())
+                    .orElseThrow(() -> new NotFoundException("Пользователь не найден: " + request.getRequesterId()));
+
+            UserShortDto userDto = new UserShortDto();
+            userDto.setId(user.getId());
+            userDto.setName(user.getName());
+            userDto.setEmail(user.getEmail());
+            userDto.setActive(user.getActive());
+            dto.setRequester(userDto);
         }
 
         return dto;
