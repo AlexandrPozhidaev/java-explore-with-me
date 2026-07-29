@@ -36,7 +36,7 @@ public interface RequestRepository extends JpaRepository<ParticipationRequest, L
 
     @Query("SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END " +
             "FROM ParticipationRequest r " +
-            "WHERE r.requesterId = :requesterId " +
+            "WHERE r.requester.id = :requesterId " +
             "AND r.event.id = :eventId " +
             "AND r.status <> :status")
     boolean existsByRequesterIdAndEventIdAndStatusNot(
