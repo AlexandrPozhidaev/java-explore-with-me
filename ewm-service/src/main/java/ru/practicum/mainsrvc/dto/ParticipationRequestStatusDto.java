@@ -1,13 +1,11 @@
 package ru.practicum.mainsrvc.dto;
 
-import ru.practicum.mainsrvc.entity.RequestStatus;
-
 import java.util.List;
 
 public class ParticipationRequestStatusDto {
 
     private List<Long> requestIds;
-    private RequestStatus status;
+    private String status;
 
     public List<Long> getRequestIds() {
         return requestIds;
@@ -17,11 +15,11 @@ public class ParticipationRequestStatusDto {
         this.requestIds = requestIds;
     }
 
-    public RequestStatus getStatus() {
+    public String getStatus() {
         return status;
     }
 
-    public void setStatus(RequestStatus status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 }

@@ -22,17 +22,14 @@ public class NewEventDto {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", shape = JsonFormat.Shape.STRING)
     private LocalDateTime eventDate;
 
-    @NotNull(message = "Лимит участников обязателен")
     @PositiveOrZero(message = "participantLimit должен быть >= 0")
-    private Integer participantLimit;
+    private Integer participantLimit = 0;
 
     private Boolean pinned;
 
-    @NotNull(message = "Флаг paid обязателен")
-    private Boolean paid;
+    private Boolean paid = false;
 
-    @NotNull(message = "Флаг requestModeration обязателен")
-    private Boolean requestModeration;
+    private Boolean requestModeration = true;
 
     @NotNull(message = "Категория обязательна")
     private Long category;

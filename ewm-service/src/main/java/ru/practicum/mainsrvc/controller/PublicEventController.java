@@ -45,8 +45,8 @@ public class PublicEventController {
         if (from < 0) {
             throw new IllegalArgumentException("from не может быть отрицательным");
         }
-        if (size <= 0 || size > 1000) {
-            throw new IllegalArgumentException("size должен быть от 1 до 1000");
+        if (size <= 0 || size > 100000) {
+            throw new IllegalArgumentException("size должен быть от 1 до 100000");
         }
 
         List<EventShortDto> result = eventService.getPublicEvents(

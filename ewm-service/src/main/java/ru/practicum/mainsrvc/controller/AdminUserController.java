@@ -16,7 +16,7 @@ public class AdminUserController {
 
     private final UserService userService;
 
-    private static final int MAX_PAGE_SIZE = 1000;
+    private static final int MAX_PAGE_SIZE = 100000;
     private static final int MIN_PAGE_SIZE = 1;
 
     public AdminUserController(UserService userService) {

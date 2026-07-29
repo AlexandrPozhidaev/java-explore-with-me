@@ -7,8 +7,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.mainsrvc.dto.EventShortDto;
 import ru.practicum.mainsrvc.dto.ParticipationRequestDto;
 import ru.practicum.mainsrvc.dto.ParticipationRequestStatusDto;
+import ru.practicum.mainsrvc.dto.UserShortDto;
 import ru.practicum.mainsrvc.entity.*;
 import ru.practicum.mainsrvc.exception.ConflictException;
 import ru.practicum.mainsrvc.exception.NotFoundException;
@@ -193,6 +195,14 @@ public class ParticipationRequestService {
             throw new IllegalArgumentException("status не может быть null");
         }
 
+        RequestStatus status;
+        try {
+            status = RequestStatus.valueOf(dto.getStatus());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Неизвестный статус: " + dto.getStatus() +
+                    ". Допустимые значения: CONFIRMED, REJECTED");
+        }
+
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие не найдено"));
 
@@ -224,7 +234,7 @@ public class ParticipationRequestService {
 
         List<ParticipationRequestDto> result = new ArrayList<>();
 
-        if (dto.getStatus() == RequestStatus.CONFIRMED) {
+        if (status == RequestStatus.CONFIRMED) {
             Integer participantLimit = event.getParticipantLimit();
             long confirmedCount = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
 
@@ -244,7 +254,6 @@ public class ParticipationRequestService {
                 if (participantLimit != null && participantLimit > 0) {
                     confirmedCount++;
                     if (confirmedCount >= participantLimit) {
-                        // Отклоняем все оставшиеся PENDING заявки
                         rejectAllPendingRequests(eventId);
                         log.info("Лимит участников достигнут, все оставшиеся заявки отклонены");
                         break;
@@ -254,7 +263,7 @@ public class ParticipationRequestService {
 
             requestRepository.saveAll(requests);
 
-        } else if (dto.getStatus() == RequestStatus.REJECTED) {
+        } else if (status == RequestStatus.REJECTED) {
             for (ParticipationRequest request : requests) {
                 if (request.getStatus() != RequestStatus.PENDING) {
                     throw new ConflictException(
@@ -265,8 +274,9 @@ public class ParticipationRequestService {
                 result.add(toDto(request));
             }
             requestRepository.saveAll(requests);
+
         } else {
-            throw new IllegalArgumentException("Неизвестный статус: " + dto.getStatus());
+            throw new IllegalArgumentException("Неизвестный статус: " + status);
         }
 
         return result;
@@ -283,14 +293,33 @@ public class ParticipationRequestService {
         }
     }
 
-    private ParticipationRequestDto toDto(ParticipationRequest r) {
+    private ParticipationRequestDto toDto(ParticipationRequest request) {
         ParticipationRequestDto dto = new ParticipationRequestDto();
-        dto.setId(r.getId());
-        dto.setCreated(r.getCreated());
-        dto.setEvent(r.getEvent().getId());
-        dto.setRequester(r.getRequesterId());
-        dto.setComment(r.getComment());
-        dto.setStatus(r.getStatus());
+        dto.setId(request.getId());
+        dto.setCreated(request.getCreated());
+        dto.setStatus(request.getStatus().name());
+        dto.setComment(request.getComment());
+
+        if (request.getEvent() != null) {
+            EventShortDto eventDto = new EventShortDto();
+            eventDto.setId(request.getEvent().getId());
+            eventDto.setTitle(request.getEvent().getTitle());
+            eventDto.setAnnotation(request.getEvent().getAnnotation());
+            dto.setEvent(eventDto);
+        }
+
+        if (request.getRequesterId() != null) {
+            User user = userRepository.findById(request.getRequesterId())
+                    .orElseThrow(() -> new NotFoundException("Пользователь не найден: " + request.getRequesterId()));
+
+            UserShortDto userDto = new UserShortDto();
+            userDto.setId(user.getId());
+            userDto.setName(user.getName());
+            userDto.setEmail(user.getEmail());
+            userDto.setActive(user.getActive());
+            dto.setRequester(userDto);
+        }
+
         return dto;
     }
 }

@@ -81,7 +81,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     @Query("SELECT e FROM Event e " +
             "JOIN FETCH e.category " +
             "JOIN FETCH e.initiator " +
-            "WHERE e.state IN :states " +
+            "WHERE (:states IS NULL OR e.state IN :states) " +
             "AND e.eventDate >= :rangeStart " +
             "AND e.eventDate <= :rangeEnd")
     Page<Event> findAdminBasic(

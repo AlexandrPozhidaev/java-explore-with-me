@@ -119,16 +119,20 @@ public class EventService {
         }
 
         String uri = "/events/" + event.getId();
+
+        Map<String, Long> hitsMap = getHitsMapForEvent(eventId);
+
         try {
             statClient.hit(uri, "ewm-service", "unknown-ip");
             log.debug("Отправлен просмотр для события {}", eventId);
         } catch (Exception ex) {
             log.warn("Не удалось отправить статистику просмотров для события id={}", eventId, ex);
+            return toEventFullDto(event, hitsMap);
         }
 
-        Map<String, Long> hitsMap = getHitsMapForEvent(eventId);
+        Map<String, Long> updatedHitsMap = getHitsMapForEvent(eventId);
 
-        return toEventFullDto(event, hitsMap);
+        return toEventFullDto(event, updatedHitsMap);
     }
 
     @Transactional
@@ -174,8 +178,8 @@ public class EventService {
             throw new ConflictException("Нельзя редактировать опубликованное событие");
         }
 
-        if (event.getState() == EventStatus.CANCELED) {
-            throw new ConflictException("Нельзя редактировать отмененное событие");
+        if (dto.getStateAction() != null) {
+            throw new ValidationException("Изменение статуса доступно только через отдельный эндпоинт");
         }
 
         validateUpdateEvent(dto, event);
@@ -197,20 +201,30 @@ public class EventService {
             throw new ForbiddenException("Пользователь не является инициатором события");
         }
 
-        if (event.getState() != EventStatus.PENDING) {
-            throw new ConflictException(
-                    "Можно изменить статус только для события в состоянии PENDING. Текущий статус: " + event.getState()
-            );
-        }
-
         EventAction action = dto.getStateAction();
 
         switch (action) {
             case SEND_TO_REVIEW:
-                log.debug("Событие id={} отправлено на модерацию", eventId);
+                if (event.getState() == EventStatus.PENDING) {
+                    log.debug("Событие id={} уже на модерации", eventId);
+                } else if (event.getState() == EventStatus.CANCELED) {
+                    event.setState(EventStatus.PENDING);
+                    log.info("Событие id={} повторно отправлено на модерацию пользователем id={}", eventId, userId);
+                } else if (event.getState() == EventStatus.PUBLISHED) {
+                    throw new ConflictException("Нельзя отправить опубликованное событие на модерацию");
+                } else {
+                    throw new ConflictException(
+                            "Нельзя отправить событие на модерацию. Текущий статус: " + event.getState()
+                    );
+                }
                 break;
 
             case CANCEL_REVIEW:
+                if (event.getState() != EventStatus.PENDING) {
+                    throw new ConflictException(
+                            "Отменить можно только событие в состоянии PENDING. Текущий статус: " + event.getState()
+                    );
+                }
                 event.setState(EventStatus.CANCELED);
                 log.info("Событие id={} отменено пользователем id={}", eventId, userId);
                 break;
@@ -288,6 +302,8 @@ public class EventService {
         List<Long> categoriesList = (categories != null && !categories.isEmpty()) ? categories : null;
 
         Page<Event> page = findAdminEvents(statesStrings, rangeStart, rangeEnd, usersList, categoriesList, pageable);
+
+        log.debug("Найдено событий: {}, всего: {}", page.getContent().size(), page.getTotalElements());
 
         return page.getContent().stream()
                 .map(e -> toEventFullDto(e, Collections.emptyMap()))

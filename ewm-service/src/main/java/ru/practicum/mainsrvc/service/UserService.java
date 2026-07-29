@@ -46,12 +46,6 @@ public class UserService {
         if (dto.getEmail() == null || dto.getEmail().isBlank()) {
             throw new IllegalArgumentException("Email обязателен");
         }
-        if (dto.getEmail().length() < 6) {
-            throw new IllegalArgumentException("Email должен содержать не менее 6 символов");
-        }
-        if (!dto.getEmail().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
-            throw new IllegalArgumentException("Email должен быть корректным");
-        }
 
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new ConflictException("Пользователь с таким email уже существует");

@@ -15,9 +15,9 @@ public class UserFullDto {
     @Size(min = 2, max = 250, message = "Имя должно содержать от 2 до 250 символов")
     private String name;
 
-    @Email(message = "Email должен быть корректным")
     @NotBlank(message = "Email обязателен")
     @Size(min = 6, max = 254, message = "Email должен содержать от 6 до 254 символов")
+    @Email(message = "Email должен быть корректным")
     private String email;
 
     private Boolean active;
