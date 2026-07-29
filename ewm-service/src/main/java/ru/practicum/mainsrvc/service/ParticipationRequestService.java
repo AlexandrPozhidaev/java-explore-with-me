@@ -7,10 +7,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.mainsrvc.dto.EventShortDto;
 import ru.practicum.mainsrvc.dto.ParticipationRequestDto;
 import ru.practicum.mainsrvc.dto.ParticipationRequestStatusDto;
-import ru.practicum.mainsrvc.dto.UserShortDto;
 import ru.practicum.mainsrvc.entity.*;
 import ru.practicum.mainsrvc.exception.ConflictException;
 import ru.practicum.mainsrvc.exception.NotFoundException;
@@ -164,9 +162,9 @@ public class ParticipationRequestService {
             throw new IllegalStateException("Нельзя отменить подтверждённую заявку");
         }
 
-        req.setStatus(RequestStatus.CANCELED);
+        req.setStatus(RequestStatus.REJECTED);
         req = requestRepository.save(req);
-        log.info("Request {} cancelled by user {}", requestId, userId);
+        log.info("Request {} cancelled (rejected) by user {}", requestId, userId);
 
         return toDto(req);
     }
@@ -301,24 +299,10 @@ public class ParticipationRequestService {
         dto.setComment(request.getComment());
 
         if (request.getEvent() != null) {
-            EventShortDto eventDto = new EventShortDto();
-            eventDto.setId(request.getEvent().getId());
-            eventDto.setTitle(request.getEvent().getTitle());
-            eventDto.setAnnotation(request.getEvent().getAnnotation());
-            dto.setEvent(eventDto);
+            dto.setEvent(request.getEvent().getId());
         }
 
-        if (request.getRequesterId() != null) {
-            User user = userRepository.findById(request.getRequesterId())
-                    .orElseThrow(() -> new NotFoundException("Пользователь не найден: " + request.getRequesterId()));
-
-            UserShortDto userDto = new UserShortDto();
-            userDto.setId(user.getId());
-            userDto.setName(user.getName());
-            userDto.setEmail(user.getEmail());
-            userDto.setActive(user.getActive());
-            dto.setRequester(userDto);
-        }
+        dto.setRequester(request.getRequesterId());
 
         return dto;
     }
