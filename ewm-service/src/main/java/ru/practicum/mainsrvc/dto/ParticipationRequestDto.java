@@ -8,12 +8,9 @@ public class ParticipationRequestDto {
 
     private Long id;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime created;
 
     private String status;
-
-    private String comment;
 
     private Long event;
 
@@ -23,16 +20,13 @@ public class ParticipationRequestDto {
         return id;
     }
 
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS", timezone = "UTC")
     public LocalDateTime getCreated() {
         return created;
     }
 
     public String getStatus() {
         return status;
-    }
-
-    public String getComment() {
-        return comment;
     }
 
     public void setId(Long id) {
@@ -45,10 +39,6 @@ public class ParticipationRequestDto {
 
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public void setComment(String comment) {
-        this.comment = comment;
     }
 
     public Long getEvent() {

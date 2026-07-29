@@ -304,7 +304,6 @@ public class ParticipationRequestService {
         dto.setId(request.getId());
         dto.setCreated(request.getCreated());
         dto.setStatus(request.getStatus().name());
-        dto.setComment(request.getComment());
 
         if (request.getEvent() != null) {
             dto.setEvent(request.getEvent().getId());

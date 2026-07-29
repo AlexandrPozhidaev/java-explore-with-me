@@ -74,13 +74,13 @@ public class UserService {
     @Transactional(readOnly = true)
     public List<UserShortDto> getUsersByIds(List<Long> ids) {
         List<User> users = userRepository.findAllById(ids);
-        if (users.size() != ids.size()) {
-            List<Long> foundIds = users.stream().map(User::getId).collect(Collectors.toList());
-            List<Long> notFound = ids.stream()
-                    .filter(id -> !foundIds.contains(id))
-                    .collect(Collectors.toList());
-            throw new NotFoundException("Пользователи не найдены: " + notFound);
-        }
+    //    if (users.size() != ids.size()) {
+    //       List<Long> foundIds = users.stream().map(User::getId).collect(Collectors.toList());
+    //        List<Long> notFound = ids.stream()
+    //                .filter(id -> !foundIds.contains(id))
+    //                .collect(Collectors.toList());
+    //        throw new NotFoundException("Пользователи не найдены: " + notFound);
+    //    }
         return users.stream()
                 .map(this::toShortDto)
                 .collect(Collectors.toList());
