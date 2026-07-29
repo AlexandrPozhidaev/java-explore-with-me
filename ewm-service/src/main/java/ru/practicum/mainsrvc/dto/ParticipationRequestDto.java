@@ -35,14 +35,6 @@ public class ParticipationRequestDto {
         return comment;
     }
 
-    public EventShortDto getEvent() {
-        return event;
-    }
-
-    public UserShortDto getRequester() {
-        return requester;
-    }
-
     public void setId(Long id) {
         this.id = id;
     }
@@ -59,8 +51,16 @@ public class ParticipationRequestDto {
         this.comment = comment;
     }
 
+    public EventShortDto getEvent() {
+        return event;
+    }
+
     public void setEvent(EventShortDto event) {
         this.event = event;
+    }
+
+    public UserShortDto getRequester() {
+        return requester;
     }
 
     public void setRequester(UserShortDto requester) {

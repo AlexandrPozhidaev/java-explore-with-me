@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.mainsrvc.dto.*;
+import ru.practicum.mainsrvc.entity.EventAction;
 import ru.practicum.mainsrvc.service.EventService;
 import ru.practicum.mainsrvc.service.ParticipationRequestService;
 
@@ -119,6 +120,19 @@ public class UserController {
             @PathVariable Long userId,
             @PathVariable Long eventId,
             @RequestBody UpdateEventRequestDto dto) {
+
+        if (dto.getStateAction() != null && !dto.getStateAction().isEmpty()) {
+            try {
+                EventAction action = EventAction.valueOf(dto.getStateAction());
+                StateActionDto stateActionDto = new StateActionDto();
+                stateActionDto.setStateAction(action);
+
+                EventFullDto result = eventService.updateEventState(userId, eventId, stateActionDto);
+                return ResponseEntity.ok(result);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Недопустимое значение stateAction: " + dto.getStateAction());
+            }
+        }
 
         EventFullDto result = eventService.updateEvent(eventId, dto, userId);
         return ResponseEntity.ok(result);

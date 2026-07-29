@@ -1,7 +1,6 @@
 package ru.practicum.mainsrvc.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import ru.practicum.mainsrvc.entity.EventAction;
 
 import java.time.LocalDateTime;
 
@@ -21,7 +20,8 @@ public class UpdateEventRequestDto {
     private Boolean requestModeration;
     private Double locationLat;
     private Double locationLon;
-    private EventAction stateAction;
+
+    private String stateAction;
 
     public String getTitle() {
         return title;
@@ -111,11 +111,11 @@ public class UpdateEventRequestDto {
         this.locationLon = locationLon;
     }
 
-    public EventAction getStateAction() {
+    public String getStateAction() {
         return stateAction;
     }
 
-    public void setStateAction(EventAction stateAction) {
+    public void setStateAction(String stateAction) {
         this.stateAction = stateAction;
     }
 }

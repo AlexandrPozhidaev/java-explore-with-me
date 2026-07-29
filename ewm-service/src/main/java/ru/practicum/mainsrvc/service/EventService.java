@@ -178,7 +178,7 @@ public class EventService {
             throw new ConflictException("Нельзя редактировать опубликованное событие");
         }
 
-        if (dto.getStateAction() != null) {
+        if (dto.getStateAction() != null && !dto.getStateAction().isEmpty()) {
             throw new ValidationException("Изменение статуса доступно только через отдельный эндпоинт");
         }
 
@@ -407,7 +407,6 @@ public class EventService {
             event.setCategory(category);
         }
 
-        // Применение действия со статусом
         if (dto.getStateAction() != null) {
             switch (dto.getStateAction()) {
                 case PUBLISH_EVENT:
