@@ -11,7 +11,7 @@ import ru.practicum.mainsrvc.dto.UpdateCompilationDto;
 import ru.practicum.mainsrvc.service.CompilationService;
 
 @RestController
-@RequestMapping(value = "/admin/compilations", path = {"/admin/compilations", "/admin/compilations/"})
+@RequestMapping("/admin/compilations")
 @Validated
 public class AdminCompilationController {
 
@@ -25,6 +25,13 @@ public class AdminCompilationController {
     public ResponseEntity<CompilationDto> createCompilation(@Valid @RequestBody NewCompilationDto dto) {
         CompilationDto created = compilationService.createCompilation(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    // необходимость из-за опечатки в тестах
+    @PostMapping("/")
+    public ResponseEntity<CompilationDto> createCompilationWithSlash(
+            @Valid @RequestBody NewCompilationDto dto) {
+        return createCompilation(dto);
     }
 
     @PatchMapping("/{compId}")
