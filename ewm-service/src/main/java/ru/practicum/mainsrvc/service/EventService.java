@@ -183,7 +183,6 @@ public class EventService {
         }
 
         validateUpdateEvent(dto, event);
-
         updateEventFields(event, dto);
 
         event = eventRepository.save(event);
@@ -315,40 +314,53 @@ public class EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие не найдено"));
 
-        if (dto.getStateAction() != null) {
-            if (dto.getStateAction() == EventAction.PUBLISH_EVENT) {
-                if (event.getState() == EventStatus.PUBLISHED) {
-                    throw new ConflictException("Событие уже опубликовано");
-                }
-                if (event.getState() != EventStatus.PENDING) {
-                    throw new ConflictException(
-                            "Нельзя опубликовать событие: текущий статус — " + event.getState() +
-                                    ". Публикация разрешена только из состояния PENDING."
-                    );
-                }
-                LocalDateTime now = LocalDateTime.now();
-                LocalDateTime minEventDate = now.plusHours(1);
-                if (event.getEventDate().isBefore(minEventDate)) {
-                    throw new IllegalArgumentException(
-                            "Дата события должна быть не ранее чем через 1 час от текущего времени"
-                    );
-                }
+        String stateActionStr = dto.getStateAction();
+
+        if (stateActionStr != null && !stateActionStr.isEmpty()) {
+            EventAction action;
+            try {
+                action = EventAction.valueOf(stateActionStr);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Неизвестное действие: " + stateActionStr);
             }
 
-            if (dto.getStateAction() == EventAction.REJECT_EVENT) {
-                if (event.getState() == EventStatus.PUBLISHED) {
-                    throw new ConflictException("Нельзя отклонить уже опубликованное событие");
-                }
-                if (event.getState() != EventStatus.PENDING) {
-                    throw new ConflictException(
-                            "Нельзя отклонить событие: текущий статус — " + event.getState() +
-                                    ". Отклонение разрешено только из состояния PENDING."
-                    );
-                }
+            switch (action) {
+                case PUBLISH_EVENT:
+                    if (event.getState() == EventStatus.PUBLISHED) {
+                        throw new ConflictException("Событие уже опубликовано");
+                    }
+                    if (event.getState() != EventStatus.PENDING) {
+                        throw new ConflictException(
+                                "Нельзя опубликовать событие: текущий статус — " + event.getState() +
+                                        ". Публикация разрешена только из состояния PENDING."
+                        );
+                    }
+                    LocalDateTime now = LocalDateTime.now();
+                    LocalDateTime minEventDate = now.plusHours(1);
+                    if (event.getEventDate().isBefore(minEventDate)) {
+                        throw new IllegalArgumentException(
+                                "Дата события должна быть не ранее чем через 1 час от текущего времени"
+                        );
+                    }
+                    break;
+
+                case REJECT_EVENT:
+                    if (event.getState() == EventStatus.PUBLISHED) {
+                        throw new ConflictException("Нельзя отклонить уже опубликованное событие");
+                    }
+                    if (event.getState() != EventStatus.PENDING) {
+                        throw new ConflictException(
+                                "Нельзя отклонить событие: текущий статус — " + event.getState() +
+                                        ". Отклонение разрешено только из состояния PENDING."
+                        );
+                    }
+                    break;
+
+                default:
+                    throw new IllegalArgumentException("Неизвестное действие: " + action);
             }
         }
 
-        // Обновление полей события
         if (dto.getTitle() != null) {
             String title = dto.getTitle();
             if (title.length() < 3 || title.length() > 120) {
@@ -407,8 +419,17 @@ public class EventService {
             event.setCategory(category);
         }
 
-        if (dto.getStateAction() != null) {
-            switch (dto.getStateAction()) {
+        if (dto.getLocationLat() != null) {
+            event.setLocationLat(dto.getLocationLat());
+        }
+
+        if (dto.getLocationLon() != null) {
+            event.setLocationLon(dto.getLocationLon());
+        }
+
+        if (stateActionStr != null && !stateActionStr.isEmpty()) {
+            EventAction action = EventAction.valueOf(stateActionStr);
+            switch (action) {
                 case PUBLISH_EVENT:
                     event.setState(EventStatus.PUBLISHED);
                     event.setPublishedOn(LocalDateTime.now());
@@ -419,7 +440,7 @@ public class EventService {
                     log.info("Событие id={} успешно отклонено администратором", eventId);
                     break;
                 default:
-                    throw new IllegalArgumentException("Неизвестное действие: " + dto.getStateAction());
+                    throw new IllegalArgumentException("Неизвестное действие: " + action);
             }
         }
 
@@ -703,60 +724,6 @@ public class EventService {
         }
     }
 
-    private void validateAdminUpdateEvent(UpdateEventRequestDto dto, Event event) {
-        LocalDateTime newEventDate = dto.getEventDate();
-        if (newEventDate != null) {
-            LocalDateTime now = LocalDateTime.now();
-            if (newEventDate.isBefore(now)) {
-                throw new ValidationException("Дата события не может быть в прошлом");
-            }
-
-            if (event.getPublishedOn() != null) {
-                LocalDateTime minEventDate = event.getPublishedOn().minusHours(1);
-                if (newEventDate.isBefore(minEventDate)) {
-                    throw new ValidationException(
-                            "Дата события не может быть раньше чем за 1 час до даты публикации"
-                    );
-                }
-            }
-        }
-
-        String title = dto.getTitle();
-        if (title != null) {
-            if (title.trim().isEmpty()) {
-                throw new ValidationException("Заголовок не может быть пустым");
-            }
-            if (title.length() < 3 || title.length() > 120) {
-                throw new ValidationException("Заголовок должен содержать от 3 до 120 символов");
-            }
-        }
-
-        String description = dto.getDescription();
-        if (description != null) {
-            if (description.trim().isEmpty()) {
-                throw new ValidationException("Описание не может быть пустым");
-            }
-            if (description.length() < 20 || description.length() > 7000) {
-                throw new ValidationException("Описание должно содержать от 20 до 7000 символов");
-            }
-        }
-
-        String annotation = dto.getAnnotation();
-        if (annotation != null) {
-            if (annotation.trim().isEmpty()) {
-                throw new ValidationException("Аннотация не может быть пустой");
-            }
-            if (annotation.length() < 20 || annotation.length() > 2000) {
-                throw new ValidationException("Аннотация должна содержать от 20 до 2000 символов");
-            }
-        }
-
-        Integer participantLimit = dto.getParticipantLimit();
-        if (participantLimit != null && participantLimit < 0) {
-            throw new ValidationException("participantLimit не может быть отрицательным");
-        }
-    }
-
     private void updateEventFields(Event event, UpdateEventRequestDto dto) {
         if (dto.getTitle() != null) {
             event.setTitle(dto.getTitle());
@@ -829,10 +796,6 @@ public class EventService {
         return dto;
     }
 
-    private EventShortDto toEventShortDto(Event e) {
-        return toEventShortDto(e, Collections.emptyMap());
-    }
-
     private EventFullDto toEventFullDto(Event e, Map<String, Long> hitsMap) {
         EventFullDto dto = new EventFullDto();
         dto.setId(e.getId());
@@ -878,23 +841,6 @@ public class EventService {
         Long confirmedRequests = requestRepository.countConfirmedByEventId(e.getId());
         dto.setConfirmedRequests(confirmedRequests);
 
-        return dto;
-    }
-
-    private CategoryDto toCategoryDto(Category c) {
-        if (c == null) return null;
-        CategoryDto dto = new CategoryDto();
-        dto.setId(c.getId());
-        dto.setName(c.getName());
-        return dto;
-    }
-
-    private UserShortDto toUserShortDto(User u) {
-        if (u == null) return null;
-        UserShortDto dto = new UserShortDto();
-        dto.setId(u.getId());
-        dto.setName(u.getName());
-        dto.setEmail(u.getEmail());
         return dto;
     }
 }
