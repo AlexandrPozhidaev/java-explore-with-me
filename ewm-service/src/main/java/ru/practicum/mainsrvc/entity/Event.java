@@ -67,6 +67,8 @@ public class Event {
     @Column(name = "location_lon")
     private Double locationLon;
 
+    private Long views = 0L;
+
     public Event() {
     }
 
@@ -204,5 +206,13 @@ public class Event {
 
     public void setLocationLon(Double locationLon) {
         this.locationLon = locationLon;
+    }
+
+    public Long getViews() {
+        return views;
+    }
+
+    public void setViews(Long views) {
+        this.views = views;
     }
 }

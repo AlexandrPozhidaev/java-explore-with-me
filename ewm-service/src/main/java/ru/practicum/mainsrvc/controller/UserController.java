@@ -124,20 +124,6 @@ public class UserController {
         return ResponseEntity.ok(result);
     }
 
-    @PatchMapping("/{userId}/events/{eventId}/state")
-    public ResponseEntity<EventFullDto> updateEventState(
-            @PathVariable Long userId,
-            @PathVariable Long eventId,
-            @RequestBody StateActionDto stateActionDto) {
-
-        if (stateActionDto == null || stateActionDto.getStateAction() == null) {
-            throw new IllegalArgumentException("stateAction не может быть null");
-        }
-
-        EventFullDto result = eventService.updateEventState(userId, eventId, stateActionDto);
-        return ResponseEntity.ok(result);
-    }
-
     @GetMapping("/{userId}/events/{eventId}")
     public ResponseEntity<EventFullDto> getEventFullById(
             @PathVariable Long userId,

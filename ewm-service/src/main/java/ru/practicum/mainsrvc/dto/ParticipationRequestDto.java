@@ -15,9 +15,9 @@ public class ParticipationRequestDto {
 
     private String comment;
 
-    private EventShortDto event;
+    private Long event;
 
-    private UserShortDto requester;
+    private Long requester;
 
     public Long getId() {
         return id;
@@ -33,14 +33,6 @@ public class ParticipationRequestDto {
 
     public String getComment() {
         return comment;
-    }
-
-    public EventShortDto getEvent() {
-        return event;
-    }
-
-    public UserShortDto getRequester() {
-        return requester;
     }
 
     public void setId(Long id) {
@@ -59,11 +51,19 @@ public class ParticipationRequestDto {
         this.comment = comment;
     }
 
-    public void setEvent(EventShortDto event) {
+    public Long getEvent() {
+        return event;
+    }
+
+    public void setEvent(Long event) {
         this.event = event;
     }
 
-    public void setRequester(UserShortDto requester) {
+    public Long getRequester() {
+        return requester;
+    }
+
+    public void setRequester(Long requester) {
         this.requester = requester;
     }
 }

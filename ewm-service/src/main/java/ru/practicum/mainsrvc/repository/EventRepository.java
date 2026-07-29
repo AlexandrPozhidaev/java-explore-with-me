@@ -3,6 +3,7 @@ package ru.practicum.mainsrvc.repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -214,4 +215,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             "JOIN FETCH e.initiator " +
             "WHERE e.id = :eventId")
     Optional<Event> findByIdWithDetails(@Param("eventId") Long eventId);
+
+    @Modifying
+    @Query("UPDATE Event e SET e.views = e.views + 1 WHERE e.id = :eventId")
+    void incrementViews(@Param("eventId") Long eventId);
     }
