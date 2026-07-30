@@ -6,7 +6,8 @@ public class EventRequestStatusUpdateResult {
     private List<ParticipationRequestDto> confirmedRequests;
     private List<ParticipationRequestDto> rejectedRequests;
 
-    public EventRequestStatusUpdateResult() {}
+    public EventRequestStatusUpdateResult() {
+    }
 
     public EventRequestStatusUpdateResult(List<ParticipationRequestDto> confirmedRequests,
                                           List<ParticipationRequestDto> rejectedRequests) {
