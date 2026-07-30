@@ -62,8 +62,7 @@ public class UserShortDto {
         UserShortDto that = (UserShortDto) o;
         return Objects.equals(id, that.id) &&
                 Objects.equals(name, that.name) &&
-                Objects.equals(email, that.email) &&
-                Objects.equals(active, that.active);
+                Objects.equals(email, that.email);
     }
 
     @Override
@@ -77,7 +76,6 @@ public class UserShortDto {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", email='" + email + '\'' +
-                ", active=" + active +
                 '}';
     }
 }
