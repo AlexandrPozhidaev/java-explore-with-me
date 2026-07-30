@@ -13,7 +13,7 @@ public class ParticipationRequestDto {
     private LocalDateTime created;
     private String status;
     private Long event;
-    private UserShortDto requester;
+    private Long requester;
 
     public Long getId() {
         return id;

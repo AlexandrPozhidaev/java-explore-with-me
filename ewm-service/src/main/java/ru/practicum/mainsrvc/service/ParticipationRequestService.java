@@ -335,12 +335,7 @@ public class ParticipationRequestService {
         }
 
         if (request.getRequester() != null) {
-            User requester = request.getRequester();
-            UserShortDto requesterDto = new UserShortDto();
-            requesterDto.setId(requester.getId());
-            requesterDto.setName(requester.getName());
-            requesterDto.setEmail(requester.getEmail());
-            dto.setRequester(requesterDto);
+            dto.setRequester(request.getRequester().getId());
         }
 
         return dto;

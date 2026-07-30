@@ -12,6 +12,7 @@ import ru.practicum.mainsrvc.service.EventService;
 import ru.practicum.mainsrvc.service.ParticipationRequestService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/users")
@@ -68,7 +69,7 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}/events/{eventId}/requests")
-    public ResponseEntity<List<ParticipationRequestDto>> approveOrRejectRequest(
+    public ResponseEntity<EventRequestStatusUpdateResult> approveOrRejectRequest(
             @PathVariable Long userId,
             @PathVariable Long eventId,
             @RequestBody ParticipationRequestStatusDto dto) {
@@ -88,7 +89,19 @@ public class UserController {
         List<ParticipationRequestDto> result = participationRequestService.processRequestStatus(
                 userId, eventId, dto);
 
-        return ResponseEntity.ok(result);
+        List<ParticipationRequestDto> confirmed = result.stream()
+                .filter(r -> "CONFIRMED".equals(r.getStatus()))
+                .collect(Collectors.toList());
+
+        List<ParticipationRequestDto> rejected = result.stream()
+                .filter(r -> "REJECTED".equals(r.getStatus()))
+                .collect(Collectors.toList());
+
+        EventRequestStatusUpdateResult response = new EventRequestStatusUpdateResult();
+        response.setConfirmedRequests(confirmed);
+        response.setRejectedRequests(rejected);
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{userId}/events")
@@ -157,7 +170,6 @@ public class UserController {
         EventFullDto result = eventService.getEventFullByIdForUser(eventId, userId);
         return ResponseEntity.ok(result);
     }
-
 
     private void validatePaginationParams(int from, int size) {
         if (from < 0) {
