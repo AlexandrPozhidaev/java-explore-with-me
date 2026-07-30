@@ -176,6 +176,12 @@ public class ParticipationRequestService {
         return requests.map(this::toDto);
     }
 
+    public Page<ParticipationRequestDto> getRequestsByEvent(Long eventId, int from, int size) {
+        Pageable pageable = PageRequest.of(from, size);
+        Page<ParticipationRequest> requests = requestRepository.findAllByEventId(eventId, pageable);
+        return requests.map(this::toDto);
+    }
+
     @Transactional
     public List<ParticipationRequestDto> processRequestStatus(
             Long userId, Long eventId, ParticipationRequestStatusDto dto) {
@@ -335,13 +341,11 @@ public class ParticipationRequestService {
         }
 
         if (request.getRequester() != null) {
-            UserShortDto requesterDto = new UserShortDto();
-
             User requester = request.getRequester();
+            UserShortDto requesterDto = new UserShortDto();
             requesterDto.setId(requester.getId());
             requesterDto.setName(requester.getName());
             requesterDto.setEmail(requester.getEmail());
-
             dto.setRequester(requesterDto);
         }
 

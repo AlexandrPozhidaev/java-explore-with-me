@@ -1,5 +1,6 @@
 package ru.practicum.mainsrvc.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -56,8 +57,12 @@ public class PublicEventController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EventFullDto> getEventById(@PathVariable Long id) {
-        EventFullDto dto = eventService.getEventFullByIdForPublicWithStats(id);
-        return ResponseEntity.ok(dto);
+    public ResponseEntity<EventFullDto> getEventById(
+            @PathVariable Long id,
+            HttpServletRequest request) {
+
+        String clientIp = request.getRemoteAddr();
+        EventFullDto event = eventService.getEventFullByIdForPublicWithStats(id, clientIp);
+        return ResponseEntity.ok(event);
     }
 }

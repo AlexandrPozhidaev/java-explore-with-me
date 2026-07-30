@@ -58,7 +58,8 @@ public class StatClient {
                     builder.toUriString(),
                     HttpMethod.GET,
                     null,
-                    new ParameterizedTypeReference<List<ViewStatsDto>>() {}
+                    new ParameterizedTypeReference<List<ViewStatsDto>>() {
+                    }
             );
             return response.getBody();
         } catch (Exception e) {

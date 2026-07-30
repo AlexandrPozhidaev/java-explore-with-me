@@ -52,7 +52,7 @@ public class CompilationService {
         if (dto.getTitle() == null || dto.getTitle().isBlank()) {
             throw new ValidationException("Заголовок подборки не может быть пустым");
         }
-        String title = dto.getTitle().trim();
+        String title = dto.getTitle();
         if (title.length() < 3 || title.length() > 50) {
             throw new ValidationException("Заголовок должен содержать от 3 до 50 символов");
         }
@@ -66,7 +66,6 @@ public class CompilationService {
         compilation.setDescription(dto.getDescription() != null ? dto.getDescription().trim() : null);
         compilation.setPinned(dto.isPinned());
 
-        // Загрузка событий
         List<Event> events = new ArrayList<>();
         if (dto.getEvents() != null && !dto.getEvents().isEmpty()) {
             events = eventRepository.findAllById(dto.getEvents());
@@ -134,7 +133,7 @@ public class CompilationService {
                 .orElseThrow(() -> new NotFoundException("Подборка не найдена: " + compId));
 
         if (dto.getTitle() != null) {
-            String newTitle = dto.getTitle().trim();
+            String newTitle = dto.getTitle();
             if (newTitle.length() < 3 || newTitle.length() > 50) {
                 throw new ValidationException("Заголовок должен содержать от 3 до 50 символов");
             }

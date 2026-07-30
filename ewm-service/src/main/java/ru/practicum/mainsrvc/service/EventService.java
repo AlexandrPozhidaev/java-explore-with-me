@@ -110,7 +110,7 @@ public class EventService {
     }
 
     @Transactional(readOnly = true)
-    public EventFullDto getEventFullByIdForPublicWithStats(Long eventId) {
+    public EventFullDto getEventFullByIdForPublicWithStats(Long eventId, String clientIp) {
         Event event = eventRepository.findByIdWithDetails(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие не найдено"));
 
@@ -121,22 +121,15 @@ public class EventService {
         String uri = "/events/" + event.getId();
 
         try {
-            statClient.hit(uri, "ewm-service", "unknown-ip");
-            log.debug("Отправлен просмотр для события {}", eventId);
+            statClient.hit(uri, "ewm-service", clientIp);
+            log.debug("Отправлен просмотр для события {} с IP {}", eventId, clientIp);
         } catch (Exception ex) {
             log.warn("Не удалось отправить статистику просмотров для события id={}", eventId, ex);
             Map<String, Long> hitsMap = getHitsMapForEvent(eventId);
             return toEventFullDto(event, hitsMap);
         }
 
-        try {
-            Thread.sleep(100); // 100ms
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
         Map<String, Long> updatedHitsMap = getHitsMapForEvent(eventId);
-
         return toEventFullDto(event, updatedHitsMap);
     }
 

@@ -15,6 +15,9 @@ public interface RequestRepository extends JpaRepository<ParticipationRequest, L
 
     List<ParticipationRequest> findAllByRequesterId(Long requesterId);
 
+    @EntityGraph(attributePaths = {"event", "event.category", "event.initiator"})
+    Page<ParticipationRequest> findAllByEventId(Long eventId, Pageable pageable);
+
     List<ParticipationRequest> findAllByEventId(Long eventId);
 
     @EntityGraph(attributePaths = {"event", "event.category", "event.initiator"})

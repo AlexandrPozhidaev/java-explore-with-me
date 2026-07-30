@@ -6,7 +6,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.mainsrvc.dto.*;
+import ru.practicum.mainsrvc.entity.Event;
 import ru.practicum.mainsrvc.entity.EventAction;
+import ru.practicum.mainsrvc.exception.ForbiddenException;
 import ru.practicum.mainsrvc.service.EventService;
 import ru.practicum.mainsrvc.service.ParticipationRequestService;
 
@@ -65,7 +67,12 @@ public class UserController {
 
         validatePaginationParams(from, size);
 
-        Page<ParticipationRequestDto> page = participationRequestService.getRequestsByUserAndEvent(
+        Event event = eventService.getEventById(eventId);
+        if (!event.getInitiator().getId().equals(userId)) {
+            throw new ForbiddenException("Пользователь не является инициатором события");
+        }
+
+        Page<ParticipationRequestDto> page = participationRequestService.getRequestsByEvent(
                 userId, eventId, from, size);
         return ResponseEntity.ok(page);
     }
