@@ -167,6 +167,28 @@ public class UserController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/{userId}/requests/list")
+    public ResponseEntity<List<ParticipationRequestDto>> getUserRequestsAsList(
+            @PathVariable Long userId) {
+
+        List<ParticipationRequestDto> result = participationRequestService.getUserRequestsAsList(userId);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/{userId}/events/{eventId}/requests/list")
+    public ResponseEntity<List<ParticipationRequestDto>> getEventRequestsAsList(
+            @PathVariable Long userId,
+            @PathVariable Long eventId) {
+
+        Event event = eventService.getEventById(eventId);
+        if (!event.getInitiator().getId().equals(userId)) {
+            throw new ForbiddenException("Пользователь не является инициатором события");
+        }
+
+        List<ParticipationRequestDto> result = participationRequestService.getEventRequestsAsList(eventId);
+        return ResponseEntity.ok(result);
+    }
+
     private void validatePaginationParams(int from, int size) {
         if (from < 0) {
             throw new IllegalArgumentException("Параметр 'from' должен быть >= 0");

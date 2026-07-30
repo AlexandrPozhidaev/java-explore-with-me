@@ -306,6 +306,24 @@ public class ParticipationRequestService {
                 .collect(Collectors.toList());
     }
 
+    public List<ParticipationRequestDto> getUserRequestsAsList(Long userId) {
+        log.debug("Getting user requests as list: userId={}", userId);
+
+        List<ParticipationRequest> requests = requestRepository.findByRequesterId(userId);
+        return requests.stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<ParticipationRequestDto> getEventRequestsAsList(Long eventId) {
+        log.debug("Getting event requests as list: eventId={}", eventId);
+
+        List<ParticipationRequest> requests = requestRepository.findByEventId(eventId);
+        return requests.stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
     private ParticipationRequestDto toDto(ParticipationRequest request) {
         ParticipationRequestDto dto = new ParticipationRequestDto();
         dto.setId(request.getId());

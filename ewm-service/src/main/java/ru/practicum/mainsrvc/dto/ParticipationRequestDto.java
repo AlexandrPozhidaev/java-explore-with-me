@@ -1,9 +1,11 @@
 package ru.practicum.mainsrvc.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import java.time.LocalDateTime;
 
+@JsonPropertyOrder({"id", "created", "status", "event", "requester"})
 public class ParticipationRequestDto {
 
     private Long id;
