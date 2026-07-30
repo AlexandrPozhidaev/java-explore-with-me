@@ -4,18 +4,15 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @JsonPropertyOrder({"id", "created", "status", "event", "requester"})
 public class ParticipationRequestDto {
 
     private Long id;
-
     private LocalDateTime created;
-
     private String status;
-
     private Long event;
-
     private UserShortDto requester;
 
     public Long getId() {
@@ -57,5 +54,33 @@ public class ParticipationRequestDto {
 
     public void setRequester(UserShortDto requester) {
         this.requester = requester;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ParticipationRequestDto that = (ParticipationRequestDto) o;
+        return Objects.equals(id, that.id) &&
+                Objects.equals(created, that.created) &&
+                Objects.equals(status, that.status) &&
+                Objects.equals(event, that.event) &&
+                Objects.equals(requester, that.requester);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, created, status, event, requester);
+    }
+
+    @Override
+    public String toString() {
+        return "ParticipationRequestDto{" +
+                "id=" + id +
+                ", created=" + created +
+                ", status='" + status + '\'' +
+                ", event=" + event +
+                ", requester=" + requester +
+                '}';
     }
 }

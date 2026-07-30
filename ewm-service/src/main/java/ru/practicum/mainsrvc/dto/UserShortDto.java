@@ -3,14 +3,15 @@ package ru.practicum.mainsrvc.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
+import java.util.Objects;
+
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"id", "name", "email", "active"})
+@JsonPropertyOrder({"id", "name", "email"})
 public class UserShortDto {
     private Long id;
     private String name;
     private String email;
     private Boolean active;
-
 
     public UserShortDto(Long id, String name, String email, Boolean active) {
         this.id = id;
@@ -52,5 +53,31 @@ public class UserShortDto {
 
     public void setActive(Boolean active) {
         this.active = active;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UserShortDto that = (UserShortDto) o;
+        return Objects.equals(id, that.id) &&
+                Objects.equals(name, that.name) &&
+                Objects.equals(email, that.email) &&
+                Objects.equals(active, that.active);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, email, active);
+    }
+
+    @Override
+    public String toString() {
+        return "UserShortDto{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", active=" + active +
+                '}';
     }
 }

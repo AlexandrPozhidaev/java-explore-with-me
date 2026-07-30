@@ -1,7 +1,6 @@
 package ru.practicum.mainsrvc.controller;
 
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,15 +28,25 @@ public class UserController {
     }
 
     @GetMapping("/{userId}/requests")
-    public ResponseEntity<Page<ParticipationRequestDto>> getUserRequests(
+    public ResponseEntity<List<ParticipationRequestDto>> getUserRequests(
+            @PathVariable Long userId) {
+
+        List<ParticipationRequestDto> result = participationRequestService.getUserRequestsAsList(userId);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/{userId}/events/{eventId}/requests")
+    public ResponseEntity<List<ParticipationRequestDto>> getRequestsForUserAndEvent(
             @PathVariable Long userId,
-            @RequestParam(defaultValue = "0") int from,
-            @RequestParam(defaultValue = "10") int size) {
+            @PathVariable Long eventId) {
 
-        validatePaginationParams(from, size);
+        Event event = eventService.getEventById(eventId);
+        if (!event.getInitiator().getId().equals(userId)) {
+            throw new ForbiddenException("Пользователь не является инициатором события");
+        }
 
-        Page<ParticipationRequestDto> page = participationRequestService.getRequestsByUser(userId, from, size);
-        return ResponseEntity.ok(page);
+        List<ParticipationRequestDto> result = participationRequestService.getEventRequestsAsList(eventId);
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping("/{userId}/requests")
@@ -56,24 +65,6 @@ public class UserController {
 
         ParticipationRequestDto result = participationRequestService.cancelRequest(userId, requestId);
         return ResponseEntity.ok(result);
-    }
-
-    @GetMapping("/{userId}/events/{eventId}/requests")
-    public ResponseEntity<Page<ParticipationRequestDto>> getRequestsForUserAndEvent(
-            @PathVariable Long userId,
-            @PathVariable Long eventId,
-            @RequestParam(defaultValue = "0") int from,
-            @RequestParam(defaultValue = "10") int size) {
-
-        validatePaginationParams(from, size);
-
-        Event event = eventService.getEventById(eventId);
-        if (!event.getInitiator().getId().equals(userId)) {
-            throw new ForbiddenException("Пользователь не является инициатором события");
-        }
-
-        Page<ParticipationRequestDto> page = participationRequestService.getRequestsByEvent(eventId, from, size);
-        return ResponseEntity.ok(page);
     }
 
     @PatchMapping("/{userId}/events/{eventId}/requests")
@@ -167,27 +158,6 @@ public class UserController {
         return ResponseEntity.ok(result);
     }
 
-    @GetMapping("/{userId}/requests/list")
-    public ResponseEntity<List<ParticipationRequestDto>> getUserRequestsAsList(
-            @PathVariable Long userId) {
-
-        List<ParticipationRequestDto> result = participationRequestService.getUserRequestsAsList(userId);
-        return ResponseEntity.ok(result);
-    }
-
-    @GetMapping("/{userId}/events/{eventId}/requests/list")
-    public ResponseEntity<List<ParticipationRequestDto>> getEventRequestsAsList(
-            @PathVariable Long userId,
-            @PathVariable Long eventId) {
-
-        Event event = eventService.getEventById(eventId);
-        if (!event.getInitiator().getId().equals(userId)) {
-            throw new ForbiddenException("Пользователь не является инициатором события");
-        }
-
-        List<ParticipationRequestDto> result = participationRequestService.getEventRequestsAsList(eventId);
-        return ResponseEntity.ok(result);
-    }
 
     private void validatePaginationParams(int from, int size) {
         if (from < 0) {
