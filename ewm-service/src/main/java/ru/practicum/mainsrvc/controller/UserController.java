@@ -72,8 +72,7 @@ public class UserController {
             throw new ForbiddenException("Пользователь не является инициатором события");
         }
 
-        Page<ParticipationRequestDto> page = participationRequestService.getRequestsByEvent(
-                userId, eventId, from, size);
+        Page<ParticipationRequestDto> page = participationRequestService.getRequestsByEvent(eventId, from, size);
         return ResponseEntity.ok(page);
     }
 
