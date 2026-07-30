@@ -48,11 +48,11 @@ public class ParticipationRequestDto {
         this.event = event;
     }
 
-    public UserShortDto getRequester() {
+    public Long getRequester() {
         return requester;
     }
 
-    public void setRequester(UserShortDto requester) {
+    public void setRequester(Long requester) {
         this.requester = requester;
     }
 
