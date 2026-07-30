@@ -12,7 +12,7 @@ public class ParticipationRequestDto {
 
     private String status;
 
-    private EventShortDto event;
+    private Long event;
 
     private UserShortDto requester;
 
@@ -41,11 +41,11 @@ public class ParticipationRequestDto {
         this.status = status;
     }
 
-    public EventShortDto getEvent() {
+    public Long getEvent() {
         return event;
     }
 
-    public void setEvent(EventShortDto event) {
+    public void setEvent(Long event) {
         this.event = event;
     }
 

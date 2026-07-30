@@ -589,7 +589,7 @@ public class EventService {
         try {
             LocalDateTime start = LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC);
             LocalDateTime end = LocalDateTime.now();
-            List<ViewStatsDto> stats = statClient.getStats(start, end, uris, false);
+            List<ViewStatsDto> stats = statClient.getStats(start, end, uris, true);
             return stats.stream()
                     .collect(Collectors.toMap(
                             ViewStatsDto::getUri,

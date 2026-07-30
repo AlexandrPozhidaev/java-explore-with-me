@@ -313,31 +313,7 @@ public class ParticipationRequestService {
         dto.setStatus(request.getStatus().name());
 
         if (request.getEvent() != null) {
-            Event event = request.getEvent();
-            EventShortDto eventDto = new EventShortDto();
-            eventDto.setId(event.getId());
-            eventDto.setTitle(event.getTitle());
-            eventDto.setAnnotation(event.getAnnotation());
-            eventDto.setEventDate(event.getEventDate());
-            eventDto.setPaid(event.isPaid());
-            eventDto.setPinned(event.isPinned());
-
-            if (event.getCategory() != null) {
-                CategoryDto categoryDto = new CategoryDto();
-                categoryDto.setId(event.getCategory().getId());
-                categoryDto.setName(event.getCategory().getName());
-                eventDto.setCategory(categoryDto);
-            }
-
-            if (event.getInitiator() != null) {
-                UserShortDto initiatorDto = new UserShortDto();
-                initiatorDto.setId(event.getInitiator().getId());
-                initiatorDto.setName(event.getInitiator().getName());
-                initiatorDto.setEmail(event.getInitiator().getEmail());
-                eventDto.setInitiator(initiatorDto);
-            }
-
-            dto.setEvent(eventDto);
+            dto.setEvent(request.getEvent().getId());
         }
 
         if (request.getRequester() != null) {

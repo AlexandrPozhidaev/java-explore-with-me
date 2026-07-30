@@ -1,10 +1,14 @@
 package ru.practicum.mainsrvc.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserShortDto {
     private Long id;
     private String name;
     private String email;
     private Boolean active;
+
 
     public UserShortDto(Long id, String name, String email, Boolean active) {
         this.id = id;
