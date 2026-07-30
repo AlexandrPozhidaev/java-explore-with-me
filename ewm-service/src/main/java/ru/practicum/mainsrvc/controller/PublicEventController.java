@@ -33,7 +33,8 @@ public class PublicEventController {
             @RequestParam(required = false)
             @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
             @RequestParam(defaultValue = "0") int from,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest request) {  // <-- ДОБАВИТЬ
 
         if (text != null && text.isBlank()) {
             text = null;
@@ -50,8 +51,10 @@ public class PublicEventController {
             throw new IllegalArgumentException("size должен быть от 1 до 100000");
         }
 
+        String clientIp = request.getRemoteAddr();
+
         List<EventShortDto> result = eventService.getPublicEvents(
-                categories, paid, text, rangeStart, rangeEnd, from, size);
+                categories, paid, text, rangeStart, rangeEnd, from, size, clientIp);
 
         return ResponseEntity.ok(result);
     }

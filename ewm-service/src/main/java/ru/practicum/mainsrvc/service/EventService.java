@@ -62,9 +62,17 @@ public class EventService {
             LocalDateTime rangeStart,
             LocalDateTime rangeEnd,
             int from,
-            int size) {
+            int size,
+            String clientIp) {
 
         validatePagination(from, size);
+
+        try {
+            statClient.hit("/events", "ewm-service", clientIp);
+            log.debug("Отправлен просмотр для /events с IP {}", clientIp);
+        } catch (Exception ex) {
+            log.warn("Не удалось отправить статистику для /events", ex);
+        }
 
         if (rangeStart == null) {
             rangeStart = LocalDateTime.now();
@@ -96,12 +104,18 @@ public class EventService {
     }
 
     @Transactional(readOnly = true)
-    public EventShortDto getEventShortById(Long eventId) {
+    public EventShortDto getEventShortById(Long eventId, String clientIp) {
         Event event = eventRepository.findByIdWithDetails(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие не найдено или не опубликовано"));
 
         if (event.getState() != EventStatus.PUBLISHED) {
             throw new NotFoundException("Событие ещё не опубликовано");
+        }
+
+        try {
+            statClient.hit("/events/" + eventId, "ewm-service", clientIp);
+        } catch (Exception ex) {
+            log.warn("Не удалось отправить статистику для события id={}", eventId, ex);
         }
 
         Map<String, Long> hitsMap = getHitsMapForEvent(eventId);
