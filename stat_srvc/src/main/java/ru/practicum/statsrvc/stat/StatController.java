@@ -6,12 +6,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 import ru.practicum.dto.StatDto;
 import ru.practicum.dto.ViewStatsDto;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @RestController
@@ -37,11 +37,18 @@ public class StatController {
 
     @GetMapping("/stats")
     public ResponseEntity<List<ViewStatsDto>> getStats(
-            @RequestParam(value = "uris", required = false) List<String> uris,
-            @RequestParam String start,
-            @RequestParam String end,
-            @RequestParam(defaultValue = "false") boolean unique
-    ) {
+            @RequestParam(required = false) List<String> uris,
+            @RequestParam(required = false) String start,
+            @RequestParam(required = false) String end,
+            @RequestParam(defaultValue = "false") boolean unique) {
+
+        if (start == null || start.isBlank()) {
+            throw new IllegalArgumentException("Параметр 'start' обязателен");
+        }
+        if (end == null || end.isBlank()) {
+            throw new IllegalArgumentException("Параметр 'end' обязателен");
+        }
+
         try {
             String startStr = start
                     .replace("%20", " ")
@@ -64,17 +71,21 @@ public class StatController {
             LocalDateTime endDate = LocalDateTime.parse(endStr, FORMATTER);
 
             if (startDate.isAfter(endDate)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "Параметр start не может быть позже end");
+                throw new IllegalArgumentException("Параметр 'start' не может быть позже 'end'");
             }
 
             List<ViewStatsDto> stats = statService.getStats(uris, startDate, endDate, unique);
             return ResponseEntity.ok(stats);
 
-        } catch (Exception e) {
+        } catch (DateTimeParseException e) {
             log.error("Ошибка парсинга дат: start={}, end={}", start, end, e);
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Неверный формат даты. Ожидается: yyyy-MM-dd HH:mm:ss, получено: start=" + start + ", end=" + end);
+            throw new IllegalArgumentException("Неверный формат даты. Ожидается: yyyy-MM-dd HH:mm:ss");
+        } catch (IllegalArgumentException e) {
+            log.warn("Ошибка валидации запроса: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Внутренняя ошибка при получении статистики", e);
+            throw new RuntimeException("Внутренняя ошибка сервера");
         }
     }
 }
