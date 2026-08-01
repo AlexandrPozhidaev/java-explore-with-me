@@ -2,7 +2,6 @@ package ru.practicum.mainsrvc.controller;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.mainsrvc.dto.EventFullDto;
 import ru.practicum.mainsrvc.dto.NewEventDto;
@@ -11,7 +10,6 @@ import ru.practicum.mainsrvc.service.EventService;
 
 @RestController
 @RequestMapping("/private/events")
-@Validated
 public class PrivateEventController {
 
     private final EventService eventService;

@@ -12,6 +12,7 @@ import ru.practicum.mainsrvc.exception.ConflictException;
 import ru.practicum.mainsrvc.repository.CategoryRepository;
 
 @Service
+@Transactional
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
@@ -31,7 +32,6 @@ public class CategoryService {
         return toCategoryDto(c);
     }
 
-    @Transactional
     public CategoryDto createCategory(NewCategoryDto dto) {
         String name = dto.getName();
         if (name == null || name.length() < 1 || name.length() > 50) {
@@ -46,7 +46,6 @@ public class CategoryService {
         return toCategoryDto(c);
     }
 
-    @Transactional
     public CategoryDto updateCategory(Long catId, UpdateCategoryDto dto) {
         String name = dto.getName();
         if (name == null || name.length() < 1 || name.length() > 50) {
@@ -66,7 +65,6 @@ public class CategoryService {
         return toCategoryDto(c);
     }
 
-    @Transactional
     public void deleteCategory(Long catId) {
         if (!categoryRepository.existsById(catId)) {
             throw new org.springframework.dao.EmptyResultDataAccessException("Категория не найдена", 1);

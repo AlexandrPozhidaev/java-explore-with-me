@@ -45,7 +45,6 @@ public class CompilationService {
         this.statClient = statClient;
     }
 
-    @Transactional
     public CompilationDto createCompilation(NewCompilationDto dto) {
         log.debug("Creating compilation with title: {}", dto.getTitle());
 
@@ -125,7 +124,6 @@ public class CompilationService {
         return toCompilationDto(compilation, hitsMap);
     }
 
-    @Transactional
     public CompilationDto updateCompilation(Long compId, UpdateCompilationDto dto) {
         log.debug("Updating compilation: id={}", compId);
 
@@ -177,7 +175,6 @@ public class CompilationService {
         return toCompilationDto(compilation, hitsMap);
     }
 
-    @Transactional
     public void deleteCompilation(Long compId) {
         log.debug("Deleting compilation: id={}", compId);
 

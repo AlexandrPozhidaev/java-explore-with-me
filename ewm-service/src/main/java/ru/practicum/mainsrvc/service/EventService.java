@@ -147,7 +147,6 @@ public class EventService {
         return toEventFullDto(event, updatedHitsMap);
     }
 
-    @Transactional
     public EventFullDto createEvent(NewEventDto dto, Long initiatorId) {
         validateNewEvent(dto);
 
@@ -181,7 +180,6 @@ public class EventService {
         return toEventFullDto(event, Collections.emptyMap());
     }
 
-    @Transactional
     public EventFullDto updateEvent(Long eventId, UpdateEventRequestDto dto, Long initiatorId) {
         Event event = eventRepository.findByIdAndInitiator(eventId, initiatorId)
                 .orElseThrow(() -> new NotFoundException("Событие не найдено"));
@@ -203,7 +201,6 @@ public class EventService {
         return toEventFullDto(event, Collections.emptyMap());
     }
 
-    @Transactional
     public EventFullDto updateEventState(Long userId, Long eventId, StateActionDto dto) {
         Event event = eventRepository.findByIdWithDetails(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие не найдено"));
@@ -321,7 +318,6 @@ public class EventService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional
     public EventFullDto updateEventByAdmin(Long eventId, UpdateEventRequestDto dto) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие не найдено"));
@@ -460,7 +456,6 @@ public class EventService {
         return toEventFullDto(event, Collections.emptyMap());
     }
 
-    @Transactional
     public EventFullDto publishEvent(Long eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие не найдено"));
@@ -488,7 +483,6 @@ public class EventService {
         return toEventFullDto(event, Collections.emptyMap());
     }
 
-    @Transactional
     public EventFullDto rejectEvent(Long eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие не найдено"));

@@ -29,7 +29,6 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    @Transactional
     public UserFullDto createUser(UserFullDto dto) {
         log.debug("Creating user: email={}", dto.getEmail());
 
@@ -87,7 +86,6 @@ public class UserService {
         return toShortDto(user);
     }
 
-    @Transactional
     public UserShortDto activateUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден: " + userId));
@@ -97,7 +95,6 @@ public class UserService {
         return toShortDto(user);
     }
 
-    @Transactional
     public void deleteUser(Long userId) {
         log.debug("Deleting user: id={}", userId);
 
@@ -109,7 +106,6 @@ public class UserService {
         log.info("Deleted user: id={}", userId);
     }
 
-    @Transactional
     public void deleteUsers(List<Long> ids) {
         log.debug("Deleting users: ids={}", ids);
 

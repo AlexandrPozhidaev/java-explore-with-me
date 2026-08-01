@@ -182,7 +182,6 @@ public class ParticipationRequestService {
         return requests.map(this::toDto);
     }
 
-    @Transactional
     public List<ParticipationRequestDto> processRequestStatus(
             Long userId, Long eventId, ParticipationRequestStatusDto dto) {
 

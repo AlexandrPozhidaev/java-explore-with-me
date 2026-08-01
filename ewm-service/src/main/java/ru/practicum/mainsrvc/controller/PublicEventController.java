@@ -3,7 +3,6 @@ package ru.practicum.mainsrvc.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.mainsrvc.dto.EventFullDto;
 import ru.practicum.mainsrvc.dto.EventShortDto;
@@ -14,7 +13,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/events")
-@Validated
 public class PublicEventController {
 
     private final EventService eventService;
