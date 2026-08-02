@@ -64,3 +64,29 @@ CREATE TABLE IF NOT EXISTS compilation_events (
     event_id        BIGINT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
     PRIMARY KEY (compilation_id, event_id)
 );
+
+CREATE TABLE IF NOT EXISTS comments (
+    id                  BIGSERIAL PRIMARY KEY,
+    text                TEXT NOT NULL,
+    event_id            BIGINT NOT NULL,
+    author_id           BIGINT NOT NULL,
+    created             TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    updated             TIMESTAMP WITHOUT TIME ZONE,
+    status              VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    moderator_comment   TEXT,
+    moderated_at        TIMESTAMP WITHOUT TIME ZONE,
+    moderator_id        BIGINT,
+    is_deleted          BOOLEAN NOT NULL DEFAULT FALSE,
+
+    CONSTRAINT fk_comments_event FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+    CONSTRAINT fk_comments_author FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_comments_moderator FOREIGN KEY (moderator_id) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT chk_comment_status CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_comments_event_id ON comments(event_id);
+CREATE INDEX IF NOT EXISTS idx_comments_author_id ON comments(author_id);
+CREATE INDEX IF NOT EXISTS idx_comments_status ON comments(status);
+CREATE INDEX IF NOT EXISTS idx_comments_created ON comments(created);
+CREATE INDEX IF NOT EXISTS idx_comments_event_status ON comments(event_id, status);
+CREATE INDEX IF NOT EXISTS idx_comments_event_status_deleted ON comments(event_id, status, is_deleted);
