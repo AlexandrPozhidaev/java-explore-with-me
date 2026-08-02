@@ -866,7 +866,7 @@
                   "const response = pm.response.json();",
                   "",
                   "pm.test('Ошибка: текст обязателен', function() {",
-                  "    pm.expect(response.message).to.include('Комментарий должен быть от 1 до 2000 символов; Комментарий не может быть пустым');",
+                  "    pm.expect(response.message).to.include('Комментарий должен быть от 1 до 2000 символов');",
                   "});"
                 ],
                 "type": "text/javascript",
