@@ -3,15 +3,15 @@ package ru.practicum.statsrvc.stat;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 import ru.practicum.dto.StatDto;
 import ru.practicum.dto.ViewStatsDto;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @RestController
@@ -20,6 +20,8 @@ public class StatController {
 
     private static final Logger log = LoggerFactory.getLogger(StatController.class);
     private final StatService statService;
+
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public StatController(StatService statService) {
         this.statService = statService;
@@ -35,23 +37,55 @@ public class StatController {
 
     @GetMapping("/stats")
     public ResponseEntity<List<ViewStatsDto>> getStats(
-            @RequestParam(value = "uris", required = false) List<String> uris,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
-            @RequestParam(defaultValue = "false") boolean unique
-    ) {
-        if (start == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Параметр start обязателен");
+            @RequestParam(required = false) List<String> uris,
+            @RequestParam(required = false) String start,
+            @RequestParam(required = false) String end,
+            @RequestParam(defaultValue = "false") boolean unique) {
+
+        if (start == null || start.isBlank()) {
+            throw new IllegalArgumentException("Параметр 'start' обязателен");
         }
-        if (end == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Параметр end обязателен");
+        if (end == null || end.isBlank()) {
+            throw new IllegalArgumentException("Параметр 'end' обязателен");
         }
 
-        if (start.isAfter(end)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Параметр start не может быть позже end");
-        }
+        try {
+            String startStr = start
+                    .replace("%20", " ")
+                    .replace("+", " ")
+                    .trim();
 
-        List<ViewStatsDto> stats = statService.getStats(uris, start, end, unique);
-        return ResponseEntity.ok(stats);
+            String endStr = end
+                    .replace("%20", " ")
+                    .replace("+", " ")
+                    .trim();
+
+            if (!startStr.contains(":")) {
+                startStr += " 00:00:00";
+            }
+            if (!endStr.contains(":")) {
+                endStr += " 23:59:59";
+            }
+
+            LocalDateTime startDate = LocalDateTime.parse(startStr, FORMATTER);
+            LocalDateTime endDate = LocalDateTime.parse(endStr, FORMATTER);
+
+            if (startDate.isAfter(endDate)) {
+                throw new IllegalArgumentException("Параметр 'start' не может быть позже 'end'");
+            }
+
+            List<ViewStatsDto> stats = statService.getStats(uris, startDate, endDate, unique);
+            return ResponseEntity.ok(stats);
+
+        } catch (DateTimeParseException e) {
+            log.error("Ошибка парсинга дат: start={}, end={}", start, end, e);
+            throw new IllegalArgumentException("Неверный формат даты. Ожидается: yyyy-MM-dd HH:mm:ss");
+        } catch (IllegalArgumentException e) {
+            log.warn("Ошибка валидации запроса: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Внутренняя ошибка при получении статистики", e);
+            throw new RuntimeException("Внутренняя ошибка сервера");
+        }
     }
 }

@@ -10,12 +10,14 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.client.HttpClientErrorException;
 
+import java.time.format.DateTimeFormatter;
 import java.util.stream.Collectors;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(
@@ -33,9 +35,8 @@ public class GlobalExceptionHandler {
         log.warn("Ошибка валидации [{}] {}: {}",
                 request.getMethod(), request.getRequestURI(), message);
 
-        // Передаем статус как строку (например, "400") и сообщение
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse(String.valueOf(HttpStatus.BAD_REQUEST.value()), message));
+                .body(new ErrorResponse("BAD_REQUEST", message));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -47,8 +48,15 @@ public class GlobalExceptionHandler {
         log.warn("Бизнес-ошибка [{}] {}: {}",
                 request.getMethod(), request.getRequestURI(), message);
 
+        String status;
+        if (message != null && (message.contains("start") || message.contains("end") || message.contains("даты"))) {
+            status = "BAD_REQUEST";
+        } else {
+            status = "BAD_REQUEST";
+        }
+
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse(String.valueOf(HttpStatus.BAD_REQUEST.value()), message));
+                .body(new ErrorResponse(status, message));
     }
 
     @ExceptionHandler(Exception.class)
@@ -61,12 +69,13 @@ public class GlobalExceptionHandler {
                 request.getMethod(), request.getRequestURI(), ex.getMessage(), ex);
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), message));
+                .body(new ErrorResponse("INTERNAL_SERVER_ERROR", message));
     }
 
     @ExceptionHandler(HttpClientErrorException.BadRequest.class)
     public ResponseEntity<ErrorResponse> handleBadRequest(HttpClientErrorException.BadRequest ex) {
         String body = ex.getResponseBodyAsString();
-        return ResponseEntity.badRequest().body(new ErrorResponse("400", "Ошибка валидации параметров на сервере статистики: " + ex.getMessage()));
+        return ResponseEntity.badRequest()
+                .body(new ErrorResponse("BAD_REQUEST", "Ошибка валидации параметров на сервере статистики: " + ex.getMessage()));
     }
 }
