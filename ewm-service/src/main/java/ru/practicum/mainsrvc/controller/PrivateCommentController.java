@@ -3,13 +3,14 @@ package ru.practicum.mainsrvc.controller;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.mainsrvc.dto.CommentDto;
 import ru.practicum.mainsrvc.dto.NewCommentDto;
 import ru.practicum.mainsrvc.dto.UpdateCommentDto;
 import ru.practicum.mainsrvc.service.CommentService;
 
-@RestController
+@Controller
 @RequestMapping("/users/{userId}/comments")
 public class PrivateCommentController {
 

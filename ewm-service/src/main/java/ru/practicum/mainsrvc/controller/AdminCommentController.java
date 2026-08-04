@@ -2,13 +2,14 @@ package ru.practicum.mainsrvc.controller;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.mainsrvc.dto.CommentAdminDto;
 import ru.practicum.mainsrvc.dto.CommentDto;
 import ru.practicum.mainsrvc.entity.CommentStatus;
 import ru.practicum.mainsrvc.service.CommentService;
 
-@RestController
+@Controller
 @RequestMapping("/admin/comments")
 public class AdminCommentController {
 

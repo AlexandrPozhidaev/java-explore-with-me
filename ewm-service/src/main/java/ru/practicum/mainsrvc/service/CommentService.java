@@ -214,7 +214,6 @@ public class CommentService {
         comment.setModerator(moderator);
         comment.setModeratedAt(LocalDateTime.now());
 
-        comment = commentRepository.save(comment);
         log.info("Комментарий id={} промодерирован администратором id={}. Новый статус: {}",
                 commentId, adminId, dto.getStatus());
 
